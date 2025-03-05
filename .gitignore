@@ -31,7 +31,6 @@ yarn-error.log*
 
 # IDE
 .idea/
-.vscode/
 *.sublime-project
 *.sublime-workspace
 
@@ -49,4 +48,49 @@ backend/dist/
 backend/node_modules/
 
 # Cursor specific
-.cursor/ 
+.cursor/
+.cursor/rules
+
+# TypeScript
+*.tsbuildinfo
+*.js.map
+*.d.ts.map
+.tscache/
+
+# ESLint
+.eslintcache
+
+# Prettier
+.prettier.cache
+
+# Windows
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+
+# Package manager
+.npm/
+.yarn/
+.yarn-integrity
+.pnpm-store/
+
+# Build
+*.zip
+*.tar.gz
+*.rar
+
+# Debug
+.node_repl_history
+.history/
+
+# VS Code (окремий розділ)
+.vscode/*
+!.vscode/settings.json
+!.vscode/tasks.json
+!.vscode/launch.json
+!.vscode/extensions.json
+
+# Інші специфічні файли
+rules.mdc
+tsconfig.json
+tsconfig.build.json 
