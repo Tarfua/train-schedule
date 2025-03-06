@@ -37,6 +37,9 @@ COPY --from=builder /app/dist ./dist
 # Generate Prisma client in production
 RUN npx prisma generate
 
+# Apply migrations
+RUN npx prisma migrate deploy
+
 # Copy environment file if exists
 RUN if [ -f .env.production ]; then cp .env.production .env; fi
 
