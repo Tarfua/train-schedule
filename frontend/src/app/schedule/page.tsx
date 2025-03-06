@@ -8,11 +8,14 @@ import { uk } from 'date-fns/locale';
 import StationSelector from './components/StationSelector';
 import ScheduleTable from './components/ScheduleTable';
 import CurrentTime from './components/CurrentTime';
+import { useRouter } from 'next/navigation';
 
 /**
  * Сторінка розкладу потягів
  */
 const SchedulePage: React.FC = () => {
+  const router = useRouter();
+  
   // Стани для даних
   const [stations, setStations] = useState<Station[]>([]);
   const [schedules, setSchedules] = useState<TrainSchedule[]>([]);
@@ -98,7 +101,15 @@ const SchedulePage: React.FC = () => {
           stations={stations} 
           onSelect={handleStationSelect} 
         />
-        <CurrentTime />
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => router.push('/schedule/edit')}
+            className="px-4 py-2 bg-dark-700 hover:bg-dark-600 text-accent rounded-md transition-colors"
+          >
+            Редагувати розклад
+          </button>
+          <CurrentTime />
+        </div>
       </div>
 
       {/* Завантаження даних розкладу */}
