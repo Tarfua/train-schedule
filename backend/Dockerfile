@@ -6,14 +6,28 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Copy all files
-COPY . .
+# Debug: Show current directory
+RUN pwd && ls -la
 
-# Show environment info
-RUN node -v && npm -v && ls -la
+# Copy package files first
+COPY package*.json ./
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
+
+# Debug: Show copied files
+RUN echo "=== Files after initial copy ===" && ls -la
 
 # Install dependencies
 RUN npm ci
+
+# Copy all remaining files
+COPY . .
+
+# Debug: Show all files
+RUN echo "=== Files after full copy ===" && ls -la
+
+# Show environment info
+RUN node -v && npm -v && ls -la
 
 # Generate Prisma client
 RUN npx prisma generate
