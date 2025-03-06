@@ -43,6 +43,20 @@ export class AuthService {
     return tokens;
   }
 
+  async logout(refreshToken: string): Promise<void> {
+    try {
+      // Перевіряємо валідність refresh токена
+      await this.jwtService.verifyAsync(refreshToken, {
+        secret: process.env.JWT_REFRESH_SECRET,
+      });
+      // В майбутньому тут можна додати логіку для блокування токена
+      // наприклад, додавання його в чорний список
+    } catch (error) {
+      // Якщо токен невалідний, просто ігноруємо це
+      console.log('Invalid refresh token during logout:', error.message);
+    }
+  }
+
   private async generateTokens(userId: string, email: string): Promise<{ accessToken: string; refreshToken: string }> {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(

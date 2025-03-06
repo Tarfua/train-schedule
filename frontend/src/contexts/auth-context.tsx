@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback, useMemo } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserData, createAuthService } from '@/services/auth-service';
 
@@ -22,39 +22,51 @@ interface AuthProviderProps {
 export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElement => {
   const [user, setUser] = useState<UserData | null>(null);
   const [isLoading, setIsLoading] = useState<boolean>(true);
-  const authService = createAuthService();
   const router = useRouter();
+  
+  // Створюємо authService один раз при монтуванні компонента
+  const authService = useMemo(() => createAuthService(), []);
 
   const fetchUser = useCallback(async (): Promise<void> => {
     try {
-      if (authService.isAuthenticated()) {
-        // Тимчасове рішення, поки немає ендпоінту для отримання даних користувача
-        const accessToken = authService.getAccessToken();
-        if (accessToken) {
-          // Декодуємо JWT токен, щоб отримати базову інформацію
-          const tokenParts = accessToken.split('.');
-          if (tokenParts.length === 3) {
-            try {
-              const payload = JSON.parse(atob(tokenParts[1]));
-              if (payload && payload.email) {
-                setUser({
-                  id: payload.sub || 'user-id',
-                  email: payload.email
-                });
-              }
-            } catch (e) {
-              console.error('Помилка при декодуванні токена:', e);
-              await authService.logout();
-              setUser(null);
-            }
-          } else {
-            await authService.logout();
-            setUser(null);
-          }
+      if (!authService.isAuthenticated()) {
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      const accessToken = authService.getAccessToken();
+      if (!accessToken) {
+        await authService.logout();
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      // Декодуємо JWT токен
+      const tokenParts = accessToken.split('.');
+      if (tokenParts.length !== 3) {
+        await authService.logout();
+        setUser(null);
+        setIsLoading(false);
+        return;
+      }
+
+      try {
+        const payload = JSON.parse(atob(tokenParts[1]));
+        if (payload && payload.email) {
+          setUser({
+            id: payload.sub || 'user-id',
+            email: payload.email
+          });
         } else {
           await authService.logout();
           setUser(null);
         }
+      } catch (e) {
+        console.error('Помилка при декодуванні токена:', e);
+        await authService.logout();
+        setUser(null);
       }
     } catch (error) {
       console.error('Помилка при отриманні даних користувача:', error);
@@ -63,7 +75,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
     } finally {
       setIsLoading(false);
     }
-  }, [authService, setUser]);
+  }, [authService]); // Тепер залежить тільки від authService, який не змінюється
 
   useEffect(() => {
     fetchUser();
