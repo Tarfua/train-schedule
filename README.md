@@ -55,7 +55,7 @@ cd backend
 npm run start:dev
 ```
 
-Бекенд буде доступний за адресою: http://localhost:5000
+Бекенд буде доступний за адресою: http://localhost:8080
 
 ## Ліцензія
 

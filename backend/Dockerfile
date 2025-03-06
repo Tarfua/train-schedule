@@ -40,7 +40,7 @@ RUN npx prisma generate
 # Copy environment file if exists
 RUN if [ -f .env.production ]; then cp .env.production .env; fi
 
-EXPOSE 5000
+EXPOSE 8080
 
 # Use node directly instead of npm
 CMD ["node", "dist/src/main.js"]

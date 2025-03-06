@@ -13,7 +13,7 @@ async function bootstrap() {
     exposedHeaders: ['Set-Cookie'],
   });
   
-  // Запуск сервера на порті 5000
-  await app.listen(process.env.PORT ?? 5000);
+  // Запуск сервера на порті 8080
+  await app.listen(process.env.PORT ?? 8080);
 }
 bootstrap();
