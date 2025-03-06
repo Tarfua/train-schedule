@@ -15,7 +15,6 @@ RUN npx prisma generate
 
 # Copy source code and configuration files
 COPY . .
-COPY tsconfig*.json ./
 
 # Build application
 RUN npm run build
@@ -26,10 +25,15 @@ FROM node:20-alpine
 
 WORKDIR /app
 
+# Copy package files
+COPY package*.json ./
+
+# Install ONLY production dependencies
+RUN npm install --only=production
+
 # Copy necessary files from builder
 COPY --from=builder /app/dist ./dist
-COPY --from=builder /app/node_modules ./node_modules
-COPY --from=builder /app/package*.json ./
+COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
 COPY --from=builder /app/prisma ./prisma
 
 # Generate Prisma client in production
@@ -41,4 +45,4 @@ COPY .env.production .env
 EXPOSE 5000
 
 # Use node directly instead of npm
-CMD ["node", "dist/main.js"] 
+CMD ["node", "dist/src/main.js"]
