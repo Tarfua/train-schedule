@@ -3,11 +3,13 @@ FROM node:20-alpine AS builder
 
 WORKDIR /app
 
+# Install build essentials
+RUN apk add --no-cache python3 make g++
+
 # Copy package files
 COPY package*.json ./
 
-# Install dependencies with specific NPM flags for optimization
-RUN npm ci --only=production
+# Install ALL dependencies first (including dev dependencies)
 RUN npm ci
 
 # Copy prisma files and generate client
@@ -17,8 +19,16 @@ RUN npx prisma generate
 # Copy source code and configuration files
 COPY . .
 
-# Build application with increased memory limit
-RUN NODE_OPTIONS="--max_old_space_size=2048" npm run build
+# Debug information
+RUN npm config list
+RUN node -v
+RUN npm -v
+RUN ls -la
+
+# Build application with increased memory limit and verbose output
+RUN npm run build --verbose
+
+# Check build output
 RUN ls -la dist/
 
 # Production stage
@@ -29,8 +39,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install production dependencies with specific NPM flags
-RUN npm ci --only=production --no-optional
+# Install ONLY production dependencies
+RUN npm ci --only=production --ignore-scripts
 
 # Copy necessary files from builder
 COPY --from=builder /app/dist ./dist
