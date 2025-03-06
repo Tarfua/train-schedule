@@ -11,8 +11,8 @@ import { StationModule } from './station/station.module';
 @Module({
   imports: [
     ConfigModule.forRoot({
-      isGlobal: true, // Зробити конфігурацію доступною глобально
-      envFilePath: '.env', // Шлях до .env файлу
+      isGlobal: true,
+      envFilePath: '.env',
     }),
     PrismaModule,
     UserModule,

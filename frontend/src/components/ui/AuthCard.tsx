@@ -1,17 +1,11 @@
 import React, { ReactNode } from 'react';
 
-/**
- * Інтерфейс для властивостей компонента AuthCard
- */
 interface AuthCardProps {
   title: string;
   subtitle?: string;
   children: ReactNode;
 }
 
-/**
- * UI компонент для відображення карточки автентифікації
- */
 const AuthCard: React.FC<AuthCardProps> = ({ title, subtitle, children }) => {
   return (
     <div className="max-w-md w-full mx-auto bg-dark-800 rounded-xl shadow-lg p-8 border border-dark-600">

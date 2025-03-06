@@ -24,7 +24,6 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
   const [isLoading, setIsLoading] = useState<boolean>(true);
   const router = useRouter();
   
-  // Створюємо authService один раз при монтуванні компонента
   const authService = useMemo(() => createAuthService(), []);
 
   const fetchUser = useCallback(async (): Promise<void> => {
@@ -46,12 +45,10 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
     }
   }, [authService]);
 
-  // Перевіряємо стан автентифікації при завантаженні
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
 
-  // Періодично перевіряємо стан токена
   useEffect(() => {
     if (!user) return;
 

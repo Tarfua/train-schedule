@@ -7,9 +7,6 @@ import { UpdateTrainScheduleDto } from './dto/update-train-schedule.dto';
 export class TrainScheduleService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Отримати всі записи розкладу потягів
-   */
   async findAll() {
     return this.prisma.trainSchedule.findMany({
       include: {
@@ -19,9 +16,6 @@ export class TrainScheduleService {
     });
   }
 
-  /**
-   * Отримати один запис розкладу за ID
-   */
   async findOne(id: string) {
     return this.prisma.trainSchedule.findUnique({
       where: { id },
@@ -32,19 +26,12 @@ export class TrainScheduleService {
     });
   }
 
-  /**
-   * Перевірка валідності дат і часу
-   * @private
-   */
   private validateDateTime(departureTime: Date, arrivalTime: Date): void {
     if (departureTime >= arrivalTime) {
       throw new BadRequestException('Час відправлення має бути раніше часу прибуття');
     }
   }
 
-  /**
-   * Створити новий запис розкладу потяга
-   */
   async create(data: CreateTrainScheduleDto) {
     // Перевірка, що станція відправлення та прибуття різні
     if (data.departureStationId === data.arrivalStationId) {
@@ -71,9 +58,6 @@ export class TrainScheduleService {
     });
   }
 
-  /**
-   * Оновити запис розкладу потяга
-   */
   async update(id: string, data: UpdateTrainScheduleDto) {
     // Якщо оновлюємо станції, перевіряємо чи вони різні
     if (data.departureStationId && data.arrivalStationId && 
@@ -139,10 +123,7 @@ export class TrainScheduleService {
       },
     });
   }
-
-  /**
-   * Видалити запис розкладу потяга
-   */
+  
   async remove(id: string) {
     return this.prisma.trainSchedule.delete({
       where: { id },

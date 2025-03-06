@@ -46,7 +46,6 @@ export class AuthInterceptor {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
       const expirationTime = payload.exp * 1000; // Convert to milliseconds
-      // Перевіряємо, чи токен закінчиться протягом наступних 30 секунд
       return Date.now() >= (expirationTime - 30000);
     } catch {
       return true;
@@ -54,13 +53,11 @@ export class AuthInterceptor {
   }
 
   private async refreshTokenIfNeeded(): Promise<void> {
-    // Якщо оновлення вже відбувається, чекаємо його завершення
     if (this.refreshPromise) {
       await this.refreshPromise;
       return;
     }
 
-    // Якщо оновлення ще не відбувається, починаємо його
     if (!this.isRefreshing) {
       this.isRefreshing = true;
       this.refreshPromise = this.performRefresh();

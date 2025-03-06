@@ -1,86 +1,52 @@
 import { ApiService } from './api-service';
 import Cookies from 'js-cookie';
 
-/**
- * Інтерфейс для даних авторизації
- */
 export interface LoginCredentials {
   readonly email: string;
   readonly password: string;
 }
 
-/**
- * Інтерфейс для даних реєстрації
- */
 export interface RegisterData {
   readonly email: string;
   readonly password: string;
 }
 
-/**
- * Інтерфейс для токенів автентифікації
- */
 export interface AuthTokens {
   readonly accessToken: string;
   readonly refreshToken: string;
 }
 
-/**
- * Інтерфейс для даних користувача
- */
 export interface UserData {
   readonly id: string;
   readonly email: string;
 }
 
-/**
- * Інтерфейс для відповіді на запит автентифікації
- */
 export interface AuthResponse {
   readonly user: UserData;
   readonly tokens: AuthTokens;
 }
 
-/**
- * Ключі для зберігання токенів у локальному сховищі та куках
- */
 const ACCESS_TOKEN_KEY = 'auth_access_token';
 const REFRESH_TOKEN_KEY = 'auth_refresh_token';
 
-/**
- * Сервіс для роботи з автентифікацією
- */
 export class AuthService {
   private readonly apiService: ApiService;
 
-  /**
-   * Створює новий екземпляр AuthService
-   * @param apiService Екземпляр ApiService для взаємодії з API
-   */
   constructor(apiService: ApiService) {
     this.apiService = apiService;
   }
 
-  /**
-   * Виконує вхід користувача
-   * @param credentials Дані для входу
-   * @returns Відповідь з даними користувача та токенами
-   */
   public async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Отримуємо токени
       const tokens = await this.apiService.post<AuthTokens, LoginCredentials>('/auth/login', credentials);
       if (!tokens) {
         throw new Error('Некоректна відповідь сервера: токени не отримано');
       }
       
-      // Зберігаємо токени
       this.saveTokens(tokens);
-      
-      // Отримуємо дані користувача
+
       const userData = await this.getCurrentUser();
-      
-      // Повертаємо відповідь
+
       return {
         user: userData,
         tokens: tokens
@@ -91,26 +57,17 @@ export class AuthService {
     }
   }
 
-  /**
-   * Виконує реєстрацію нового користувача
-   * @param data Дані для реєстрації
-   * @returns Відповідь з даними користувача та токенами
-   */
   public async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      // Отримуємо токени
       const tokens = await this.apiService.post<AuthTokens, RegisterData>('/auth/register', data);
       if (!tokens) {
         throw new Error('Некоректна відповідь сервера: токени не отримано');
       }
       
-      // Зберігаємо токени
       this.saveTokens(tokens);
-      
-      // Отримуємо дані користувача
+
       const userData = await this.getCurrentUser();
-      
-      // Повертаємо відповідь
+
       return {
         user: userData,
         tokens: tokens
@@ -121,9 +78,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Виконує вихід користувача
-   */
   public async logout(): Promise<void> {
     try {
       const refreshToken = this.getRefreshToken();
@@ -137,10 +91,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Перевіряє чи користувач автентифікований
-   * @returns true якщо користувач автентифікований
-   */
   public isAuthenticated(): boolean {
     const accessToken = this.getAccessToken();
     if (!accessToken) return false;
@@ -154,11 +104,6 @@ export class AuthService {
     }
   }
 
-  /**
-   * Отримує час життя токена в секундах
-   * @param token JWT токен
-   * @returns Час життя в секундах або null якщо токен невалідний
-   */
   public getTokenLifetime(token: string): number | null {
     try {
       const payload = JSON.parse(atob(token.split('.')[1]));
@@ -169,65 +114,40 @@ export class AuthService {
     }
   }
 
-  /**
-   * Отримує access token з локального сховища
-   * @returns Access token або null, якщо не знайдено
-   */
   public getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    // Пріоритет надається cookies для сумісності з middleware
     return Cookies.get(ACCESS_TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY) || null;
   }
 
-  /**
-   * Отримує refresh token з локального сховища
-   * @returns Refresh token або null, якщо не знайдено
-   */
   private getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    // Пріоритет надається cookies для сумісності з middleware
     return Cookies.get(REFRESH_TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY) || null;
   }
 
-  /**
-   * Зберігає токени автентифікації у локальному сховищі та куках
-   * @param tokens Токени автентифікації
-   */
   private saveTokens(tokens: AuthTokens): void {
     if (typeof window === 'undefined') return;
-    
-    // Зберігаємо в localStorage
+
     localStorage.setItem(ACCESS_TOKEN_KEY, tokens.accessToken);
     localStorage.setItem(REFRESH_TOKEN_KEY, tokens.refreshToken);
-    
-    // Зберігаємо в cookies для доступу з middleware
+
     const cookieOptions = { secure: process.env.NODE_ENV === 'production', sameSite: 'strict' as const };
     Cookies.set(ACCESS_TOKEN_KEY, tokens.accessToken, cookieOptions);
     Cookies.set(REFRESH_TOKEN_KEY, tokens.refreshToken, {
       ...cookieOptions,
-      expires: 7 // Зберігаємо refresh token на 7 днів
+      expires: 7 // Збереження refresh token на 7 днів
     });
   }
 
-  /**
-   * Видаляє токени автентифікації з локального сховища та кук
-   */
   private clearTokens(): void {
     if (typeof window === 'undefined') return;
-    
-    // Очищаємо localStorage
+
     localStorage.removeItem(ACCESS_TOKEN_KEY);
     localStorage.removeItem(REFRESH_TOKEN_KEY);
-    
-    // Очищаємо cookies
+
     Cookies.remove(ACCESS_TOKEN_KEY);
     Cookies.remove(REFRESH_TOKEN_KEY);
   }
 
-  /**
-   * Оновлює токени автентифікації
-   * @returns Нові токени
-   */
   public async refreshTokens(): Promise<AuthTokens> {
     const refreshToken = this.getRefreshToken();
     if (!refreshToken) {
@@ -244,18 +164,11 @@ export class AuthService {
     }
   }
 
-  /**
-   * Отримує дані поточного користувача
-   * @returns Дані користувача
-   */
   public async getCurrentUser(): Promise<UserData> {
     return this.apiService.get<UserData>('/auth/me');
   }
 }
 
-/**
- * Створює екземпляр AuthService з замовчуванням ApiService
- */
 export const createAuthService = (): AuthService => {
   return new AuthService(new ApiService());
 }; 

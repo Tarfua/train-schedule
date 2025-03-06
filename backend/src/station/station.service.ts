@@ -8,27 +8,18 @@ import { UpdateStationDto } from './dto/update-station.dto';
 export class StationService {
   constructor(private readonly prisma: PrismaService) {}
 
-  /**
-   * Отримує всі станції
-   */
   async findAll(): Promise<Station[]> {
     return this.prisma.station.findMany({
       orderBy: { name: 'asc' },
     });
   }
 
-  /**
-   * Отримує станцію за ID
-   */
   async findById(id: string): Promise<Station | null> {
     return this.prisma.station.findUnique({
       where: { id },
     });
   }
 
-  /**
-   * Пошук станцій за назвою
-   */
   async searchByName(name: string): Promise<Station[]> {
     return this.prisma.station.findMany({
       where: {
@@ -42,18 +33,12 @@ export class StationService {
     });
   }
 
-  /**
-   * Створює нову станцію
-   */
   async create(createStationDto: CreateStationDto): Promise<Station> {
     return this.prisma.station.create({
       data: createStationDto,
     });
   }
 
-  /**
-   * Оновлює існуючу станцію
-   */
   async update(id: string, updateStationDto: UpdateStationDto): Promise<Station | null> {
     return this.prisma.station.update({
       where: { id },
@@ -61,9 +46,6 @@ export class StationService {
     });
   }
 
-  /**
-   * Видаляє станцію
-   */
   async delete(id: string): Promise<void> {
     // Перевіряємо, чи використовується станція в розкладі потягів
     const trainSchedulesWithStation = await this.prisma.trainSchedule.count({

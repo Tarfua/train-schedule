@@ -5,9 +5,6 @@ import Link from 'next/link';
 import { useAuth } from '@/contexts/auth-context';
 import { UserMenu } from '@/components/UserMenu';
 
-/**
- * Компонент заголовка, який містить назву додатку та кнопку входу або меню користувача
- */
 const Header: React.FC = () => {
   const { isAuthenticated } = useAuth();
 

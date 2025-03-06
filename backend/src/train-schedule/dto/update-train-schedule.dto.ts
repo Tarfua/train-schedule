@@ -1,8 +1,5 @@
 import { IsDateString, IsInt, IsOptional, IsString, IsUUID, MaxLength, Max } from 'class-validator';
 
-/**
- * DTO для оновлення запису розкладу потяга
- */
 export class UpdateTrainScheduleDto {
   @IsString()
   @IsOptional()

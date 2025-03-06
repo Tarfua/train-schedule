@@ -1,8 +1,5 @@
 import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength, Max } from 'class-validator';
 
-/**
- * DTO для створення нового запису розкладу потяга
- */
 export class CreateTrainScheduleDto {
   @IsString()
   @IsNotEmpty()

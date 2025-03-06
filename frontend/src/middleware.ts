@@ -10,7 +10,7 @@ export function middleware(request: NextRequest): NextResponse {
   const currentPath = request.nextUrl.pathname;
   const hasAuthToken = !!request.cookies.get('auth_access_token')?.value;
 
-  // Виключаємо статичні файли та API з перевірки
+  // Виключення статичних файлів та API з перевірки
   if (
     currentPath.startsWith('/_next') || 
     currentPath.startsWith('/api') || 
@@ -29,7 +29,6 @@ export function middleware(request: NextRequest): NextResponse {
   return NextResponse.next();
 }
 
-// Обмежуємо middleware тільки для вказаних шляхів
 export const config = {
   matcher: [
     /*

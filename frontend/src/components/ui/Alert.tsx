@@ -1,42 +1,15 @@
 import React from 'react';
 
-/**
- * Типи сповіщень
- */
 export type AlertType = 'error' | 'success' | 'info' | 'warning';
 
-/**
- * Інтерфейс для властивостей компонента Alert
- */
 interface AlertProps {
-  /**
-   * Текст повідомлення
-   */
   message: string;
-  /**
-   * Тип сповіщення
-   */
   type?: AlertType;
-  /**
-   * CSS класи для додаткового стилізування
-   */
   className?: string;
-  /**
-   * Чи показувати іконку закриття
-   */
   dismissible?: boolean;
-  /**
-   * Обробник закриття сповіщення
-   */
   onDismiss?: () => void;
 }
 
-/**
- * Компонент для відображення різних типів сповіщень
- * 
- * @param props Властивості компонента
- * @returns Компонент Alert
- */
 const Alert: React.FC<AlertProps> = ({ 
   message, 
   type = 'info',

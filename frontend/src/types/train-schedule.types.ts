@@ -1,10 +1,3 @@
-/**
- * Типи для модуля розкладу потягів
- */
-
-/**
- * Тип для станції
- */
 export interface Station {
   readonly id: string;
   readonly name: string;
@@ -13,9 +6,6 @@ export interface Station {
   readonly updatedAt: string;
 }
 
-/**
- * Тип для розкладу потягів
- */
 export interface TrainSchedule {
   readonly id: string;
   readonly trainNumber: string;

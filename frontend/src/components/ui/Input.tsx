@@ -1,18 +1,12 @@
 import React, { InputHTMLAttributes, forwardRef } from 'react';
 import ErrorMessage from './ErrorMessage';
 
-/**
- * Інтерфейс для властивостей компонента Input
- */
 interface InputProps extends InputHTMLAttributes<HTMLInputElement> {
   label?: string;
   error?: string;
   helperText?: string;
 }
 
-/**
- * UI компонент для вводу тексту з підтримкою валідації
- */
 const Input = forwardRef<HTMLInputElement, InputProps>(
   ({ label, error, helperText, className = '', ...props }, ref) => {
     return (

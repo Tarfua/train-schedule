@@ -1,22 +1,13 @@
 import React, { ButtonHTMLAttributes } from 'react';
 
-/**
- * Доступні варіанти типів кнопок
- */
 type ButtonVariant = 'primary' | 'secondary' | 'outline';
 
-/**
- * Інтерфейс для властивостей компонента Button
- */
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: ButtonVariant;
   isLoading?: boolean;
   fullWidth?: boolean;
 }
 
-/**
- * UI компонент кнопки з різними варіантами відображення
- */
 const Button: React.FC<ButtonProps> = ({
   children,
   variant = 'primary',

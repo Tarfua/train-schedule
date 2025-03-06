@@ -8,9 +8,6 @@ interface UserMenuProps {
   className?: string;
 }
 
-/**
- * Компонент меню користувача з можливістю виходу
- */
 export const UserMenu: React.FC<UserMenuProps> = ({ className = '' }) => {
   const [isOpen, setIsOpen] = useState<boolean>(false);
   const { user, logout, isAuthenticated } = useAuth();
@@ -48,12 +45,12 @@ export const UserMenu: React.FC<UserMenuProps> = ({ className = '' }) => {
     setIsOpen(!isOpen);
   };
 
-  // Отримуємо першу літеру для аватара
+  // Перша літера для аватара
   const getInitial = (): string => {
     return user.email[0].toUpperCase();
   };
 
-  // Отримуємо ім'я користувача з емейлу (до @)
+  // Ім'я користувача з email (до @)
   const getUserDisplayName = (): string => {
     return user.email.split('@')[0];
   };
