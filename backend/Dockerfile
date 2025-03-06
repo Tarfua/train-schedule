@@ -38,6 +38,8 @@ COPY --from=builder /app/dist ./dist
 RUN npx prisma generate
 
 # Apply migrations
+ARG DATABASE_URL
+ENV DATABASE_URL=${DATABASE_URL}
 RUN npx prisma migrate deploy
 
 # Copy environment file if exists
