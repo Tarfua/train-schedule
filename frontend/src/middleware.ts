@@ -4,7 +4,7 @@ import { NextRequest, NextResponse } from 'next/server';
 const publicPaths = ['/auth/login', '/auth/register', '/'];
 
 // Шляхи, які потребують авторизації
-const authPaths = ['/schedule'];
+const authPaths = ['/schedule', '/stations'];
 
 export function middleware(request: NextRequest): NextResponse {
   const currentPath = request.nextUrl.pathname;
@@ -36,6 +36,7 @@ export const config = {
      * Шляхи, які потребують авторизації
      */
     '/schedule/:path*',
+    '/stations/:path*',
     /*
      * Шляхи аутентифікації 
      */

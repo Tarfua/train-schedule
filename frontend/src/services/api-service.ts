@@ -207,6 +207,25 @@ export class ApiService {
   }
 
   /**
+   * Додає токен авторизації до заголовків
+   * @param headers Початкові заголовки
+   * @returns Заголовки з доданою авторизацією
+   */
+  private addAuthorizationHeader(headers: Record<string, string>): Record<string, string> {
+    const newHeaders = { ...headers };
+    
+    // Отримуємо токен з localStorage
+    if (typeof window !== 'undefined') {
+      const token = localStorage.getItem('auth_access_token');
+      if (token) {
+        newHeaders['Authorization'] = `Bearer ${token}`;
+      }
+    }
+    
+    return newHeaders;
+  }
+
+  /**
    * Базовий метод для виконання всіх HTTP запитів
    * @param method HTTP метод
    * @param url Шлях запиту (без базового URL)
@@ -222,10 +241,10 @@ export class ApiService {
   ): Promise<T> {
     const mergedOptions: ApiRequestOptions = {
       ...options,
-      headers: {
+      headers: this.addAuthorizationHeader({
         ...this.defaultHeaders,
         ...options?.headers
-      }
+      })
     };
     
     const requestInit: RequestInit = {

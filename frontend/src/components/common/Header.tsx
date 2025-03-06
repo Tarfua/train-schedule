@@ -29,6 +29,12 @@ const Header: React.FC = () => {
               >
                 Розклад
               </Link>
+              <Link 
+                href="/stations"
+                className="text-accent-light hover:text-accent transition-colors duration-300"
+              >
+                Станції
+              </Link>
             </nav>
           )}
         </div>
