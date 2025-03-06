@@ -59,9 +59,12 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   });
   
   // Референції для обробників кліків
+  const departureRef = useRef<HTMLDivElement>(null);
+  const arrivalRef = useRef<HTMLDivElement>(null);
+  
   const dropdownRefs = useMemo(() => ({
-    departure: useRef<HTMLDivElement>(null),
-    arrival: useRef<HTMLDivElement>(null)
+    departure: departureRef,
+    arrival: arrivalRef
   }), []);
   
   // Функція оновлення стану селектора
@@ -229,7 +232,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
       clearTimeout(departureTimer);
       clearTimeout(arrivalTimer);
     };
-  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations, updateSelector]);
+  }, [stationSelectors, stations, updateSelector]);
   
   // Функція для фільтрації станцій, виключаючи вже вибрані
   const filterStationsBySelected = useCallback((stationsList: Station[], type: StationType): Station[] => {

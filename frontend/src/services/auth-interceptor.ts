@@ -2,7 +2,10 @@ import { AuthService } from './auth-service';
 
 interface RequestConfig {
   headers?: Record<string, string>;
-  [key: string]: any;
+  params?: Record<string, string | number | boolean | null | undefined>;
+  timeout?: number;
+  withCredentials?: boolean;
+  [key: string]: unknown;
 }
 
 export class AuthInterceptor {
