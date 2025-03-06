@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { PrismaService } from '../prisma/prisma.service';
 import { CreateTrainScheduleDto } from './dto/create-train-schedule.dto';
+import { UpdateTrainScheduleDto } from './dto/update-train-schedule.dto';
 
 @Injectable()
 export class TrainScheduleService {
@@ -42,6 +43,31 @@ export class TrainScheduleService {
         departureTime: new Date(departureTime),
         arrivalTime: new Date(arrivalTime),
       },
+      include: {
+        departureStation: true,
+        arrivalStation: true,
+      },
+    });
+  }
+
+  /**
+   * Оновити запис розкладу потяга
+   */
+  async update(id: string, data: UpdateTrainScheduleDto) {
+    const updateData: any = { ...data };
+    
+    // Перетворюємо рядки дати/часу в об'єкти Date
+    if (data.departureTime) {
+      updateData.departureTime = new Date(data.departureTime);
+    }
+    
+    if (data.arrivalTime) {
+      updateData.arrivalTime = new Date(data.arrivalTime);
+    }
+    
+    return this.prisma.trainSchedule.update({
+      where: { id },
+      data: updateData,
       include: {
         departureStation: true,
         arrivalStation: true,

@@ -52,7 +52,15 @@ const SchedulePage: React.FC = () => {
     try {
       setLoading(true);
       const schedulesData = await trainScheduleService.getScheduleByStation(stationId);
-      setSchedules(schedulesData);
+      
+      // Форматуємо час у формат HH:MM
+      const formattedSchedules = schedulesData.map(schedule => ({
+        ...schedule,
+        departureTime: trainScheduleService.formatTime(schedule.departureTime),
+        arrivalTime: trainScheduleService.formatTime(schedule.arrivalTime)
+      }));
+      
+      setSchedules(formattedSchedules);
     } catch (err) {
       console.error('Помилка при завантаженні розкладу:', err);
       setError('Не вдалося завантажити розклад. Спробуйте пізніше.');

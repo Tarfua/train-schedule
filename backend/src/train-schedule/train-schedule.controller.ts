@@ -1,6 +1,7 @@
-import { Controller, Get, Post, Delete, Body, Param, HttpCode } from '@nestjs/common';
+import { Controller, Get, Post, Patch, Delete, Body, Param, HttpCode } from '@nestjs/common';
 import { TrainScheduleService } from './train-schedule.service';
 import { CreateTrainScheduleDto } from './dto/create-train-schedule.dto';
+import { UpdateTrainScheduleDto } from './dto/update-train-schedule.dto';
 
 @Controller('train-schedules')
 export class TrainScheduleController {
@@ -28,6 +29,14 @@ export class TrainScheduleController {
   @Post()
   create(@Body() createTrainScheduleDto: CreateTrainScheduleDto) {
     return this.trainScheduleService.create(createTrainScheduleDto);
+  }
+
+  /**
+   * Оновити запис розкладу
+   */
+  @Patch(':id')
+  update(@Param('id') id: string, @Body() updateTrainScheduleDto: UpdateTrainScheduleDto) {
+    return this.trainScheduleService.update(id, updateTrainScheduleDto);
   }
 
   /**

@@ -6,6 +6,7 @@ import { Station, TrainSchedule } from '@/types/train-schedule.types';
 import { useRouter } from 'next/navigation';
 import ScheduleFormModal from './components/ScheduleFormModal';
 import ScheduleTable from './components/ScheduleTable';
+import { TrainScheduleDto } from '@/services/train-schedule-service';
 
 /**
  * Сторінка редагування розкладу потягів
@@ -18,6 +19,7 @@ const ScheduleEditPage: React.FC = () => {
   const [schedules, setSchedules] = useState<TrainSchedule[]>([]);
   const [loading, setLoading] = useState<boolean>(true);
   const [error, setError] = useState<string | null>(null);
+  const [isProcessing, setIsProcessing] = useState<boolean>(false);
   
   // Стани для форми редагування
   const [isFormOpen, setIsFormOpen] = useState<boolean>(false);
@@ -43,8 +45,15 @@ const ScheduleEditPage: React.FC = () => {
         const stationsData = await stationService.getStations();
         const schedulesData = await trainScheduleService.getTrainSchedules();
         
+        // Форматуємо час для відображення
+        const formattedSchedules = schedulesData.map(schedule => ({
+          ...schedule,
+          departureTime: trainScheduleService.formatTime(schedule.departureTime),
+          arrivalTime: trainScheduleService.formatTime(schedule.arrivalTime)
+        }));
+        
         setStations(stationsData);
-        setSchedules(schedulesData);
+        setSchedules(formattedSchedules);
       } catch (err) {
         console.error('Помилка при завантаженні даних:', err);
         setError('Не вдалося завантажити дані. Спробуйте пізніше.');
@@ -83,12 +92,24 @@ const ScheduleEditPage: React.FC = () => {
   };
 
   // Видалення розкладу
-  const handleDeleteSchedule = (scheduleId: string) => {
-    // Тут буде логіка видалення розкладу через API
-    // Поки що просто видаляємо з локального стану
-    setSchedules(prevSchedules => 
-      prevSchedules.filter(schedule => schedule.id !== scheduleId)
-    );
+  const handleDeleteSchedule = async (scheduleId: string) => {
+    try {
+      setIsProcessing(true);
+      await trainScheduleService.deleteTrainSchedule(scheduleId);
+      
+      // Оновлюємо локальний стан після успішного видалення
+      setSchedules(prevSchedules => 
+        prevSchedules.filter(schedule => schedule.id !== scheduleId)
+      );
+      
+      // Показуємо повідомлення про успіх
+      setError(null);
+    } catch (err) {
+      console.error('Помилка при видаленні розкладу:', err);
+      setError('Не вдалося видалити розклад. Спробуйте пізніше.');
+    } finally {
+      setIsProcessing(false);
+    }
   };
 
   // Скидання форми
@@ -120,7 +141,7 @@ const ScheduleEditPage: React.FC = () => {
   };
 
   // Збереження форми
-  const handleSaveForm = (e: React.FormEvent) => {
+  const handleSaveForm = async (e: React.FormEvent) => {
     e.preventDefault();
     
     // Валідація форми
@@ -129,56 +150,61 @@ const ScheduleEditPage: React.FC = () => {
       return;
     }
     
-    // Тут буде логіка збереження через API
-    // Поки що просто оновлюємо локальний стан
-    
-    if (formMode === 'add') {
-      // Додавання нового розкладу
-      const newSchedule: TrainSchedule = {
-        id: `temp-${Date.now()}`, // Тимчасовий ID
+    try {
+      setIsProcessing(true);
+      
+      // Підготовка даних для відправки на API
+      const scheduleData: TrainScheduleDto = {
         trainNumber: formData.trainNumber,
         departureStationId: formData.departureStation.id,
-        departureStation: formData.departureStation,
         arrivalStationId: formData.arrivalStation.id,
-        arrivalStation: formData.arrivalStation,
         departureTime: formData.departureTime,
         arrivalTime: formData.arrivalTime,
-        departurePlatform: formData.departurePlatform ? parseInt(formData.departurePlatform, 10) : undefined,
-        arrivalPlatform: formData.arrivalPlatform ? parseInt(formData.arrivalPlatform, 10) : undefined,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        departurePlatform: formData.departurePlatform ? parseInt(formData.departurePlatform) : undefined,
+        arrivalPlatform: formData.arrivalPlatform ? parseInt(formData.arrivalPlatform) : undefined
       };
       
-      setSchedules(prevSchedules => [...prevSchedules, newSchedule]);
-    } else {
-      // Редагування існуючого розкладу
-      if (selectedSchedule) {
-        const updatedSchedule: TrainSchedule = {
-          ...selectedSchedule,
-          trainNumber: formData.trainNumber,
-          departureStationId: formData.departureStation.id,
-          departureStation: formData.departureStation,
-          arrivalStationId: formData.arrivalStation.id,
-          arrivalStation: formData.arrivalStation,
-          departureTime: formData.departureTime,
-          arrivalTime: formData.arrivalTime,
-          departurePlatform: formData.departurePlatform ? parseInt(formData.departurePlatform, 10) : undefined,
-          arrivalPlatform: formData.arrivalPlatform ? parseInt(formData.arrivalPlatform, 10) : undefined,
-          updatedAt: new Date().toISOString()
-        };
-        
+      let updatedSchedule: TrainSchedule;
+      
+      if (formMode === 'add') {
+        // Додавання нового розкладу
+        updatedSchedule = await trainScheduleService.createTrainSchedule(scheduleData);
+      } else if (selectedSchedule) {
+        // Редагування існуючого розкладу
+        updatedSchedule = await trainScheduleService.updateTrainSchedule(selectedSchedule.id, scheduleData);
+      } else {
+        throw new Error('Не вдалося визначити ID розкладу для оновлення');
+      }
+      
+      // Форматуємо час для відображення
+      updatedSchedule = {
+        ...updatedSchedule,
+        departureTime: trainScheduleService.formatTime(updatedSchedule.departureTime),
+        arrivalTime: trainScheduleService.formatTime(updatedSchedule.arrivalTime)
+      };
+      
+      // Оновлюємо стан, залежно від режиму (додавання або редагування)
+      if (formMode === 'add') {
+        setSchedules(prevSchedules => [...prevSchedules, updatedSchedule]);
+      } else {
         setSchedules(prevSchedules => 
           prevSchedules.map(schedule => 
-            schedule.id === selectedSchedule.id ? updatedSchedule : schedule
+            schedule.id === updatedSchedule.id ? updatedSchedule : schedule
           )
         );
       }
+      
+      // Очищення помилок
+      setError(null);
+    } catch (err) {
+      console.error('Помилка при збереженні розкладу:', err);
+      setError('Не вдалося зберегти розклад. Спробуйте пізніше.');
+    } finally {
+      setIsProcessing(false);
+      // Закриття форми після збереження
+      setIsFormOpen(false);
+      resetForm();
     }
-    
-    // Закриття форми після збереження
-    setIsFormOpen(false);
-    resetForm();
-    setError(null);
   };
 
   // Обробник вибору станції відправлення
@@ -220,6 +246,7 @@ const ScheduleEditPage: React.FC = () => {
           <button
             onClick={handleAddSchedule}
             className="px-4 py-2 bg-accent hover:bg-accent-hover text-dark-900 rounded-md transition-colors"
+            disabled={isProcessing}
           >
             Додати рейс
           </button>
@@ -230,6 +257,13 @@ const ScheduleEditPage: React.FC = () => {
       {error && (
         <div className="p-4 mb-6 bg-dark-800 rounded-lg text-error">
           {error}
+        </div>
+      )}
+
+      {/* Індикатор обробки */}
+      {isProcessing && (
+        <div className="p-4 mb-6 bg-dark-800 rounded-lg text-accent-muted">
+          Обробка запиту...
         </div>
       )}
 
