@@ -37,15 +37,11 @@ COPY --from=builder /app/dist ./dist
 # Generate Prisma client in production
 RUN npx prisma generate
 
-# Apply migrations
-ARG DATABASE_URL
-ENV DATABASE_URL=${DATABASE_URL}
-RUN npx prisma migrate deploy
-
-# Copy environment file if exists
-RUN if [ -f .env.production ]; then cp .env.production .env; fi
+# Copy start script and make it executable
+COPY start.sh .
+RUN chmod +x start.sh
 
 EXPOSE 8080
 
-# Use node directly instead of npm
-CMD ["node", "dist/src/main.js"]
+# Use start.sh script
+CMD ["./start.sh"]
