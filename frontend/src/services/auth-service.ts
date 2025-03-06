@@ -180,7 +180,8 @@ export class AuthService {
    */
   public getAccessToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(ACCESS_TOKEN_KEY) || Cookies.get(ACCESS_TOKEN_KEY) || null;
+    // Пріоритет надається cookies для сумісності з middleware
+    return Cookies.get(ACCESS_TOKEN_KEY) || localStorage.getItem(ACCESS_TOKEN_KEY) || null;
   }
 
   /**
@@ -189,7 +190,8 @@ export class AuthService {
    */
   private getRefreshToken(): string | null {
     if (typeof window === 'undefined') return null;
-    return localStorage.getItem(REFRESH_TOKEN_KEY) || Cookies.get(REFRESH_TOKEN_KEY) || null;
+    // Пріоритет надається cookies для сумісності з middleware
+    return Cookies.get(REFRESH_TOKEN_KEY) || localStorage.getItem(REFRESH_TOKEN_KEY) || null;
   }
 
   /**

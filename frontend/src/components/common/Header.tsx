@@ -19,6 +19,18 @@ const Header: React.FC = () => {
           <Link href="/" className="text-accent-hover text-xl font-medium hover:text-accent transition-colors duration-300">
             TrainSchedule
           </Link>
+          
+          {/* Навігаційне меню для авторизованих користувачів */}
+          {isAuthenticated && (
+            <nav className="ml-8 hidden md:flex space-x-4">
+              <Link 
+                href="/schedule"
+                className="text-accent-light hover:text-accent transition-colors duration-300"
+              >
+                Розклад
+              </Link>
+            </nav>
+          )}
         </div>
 
         {/* Кнопка входу або меню користувача справа */}

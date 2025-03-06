@@ -22,3 +22,32 @@ model User {
 
   @@map("users")
 }
+
+model Station {
+  id             String          @id @default(uuid())
+  name           String
+  city           String
+  createdAt      DateTime        @default(now()) @map("created_at")
+  updatedAt      DateTime        @updatedAt @map("updated_at")
+  departureTrips TrainSchedule[] @relation("DepartureStation")
+  arrivalTrips   TrainSchedule[] @relation("ArrivalStation")
+
+  @@map("stations")
+}
+
+model TrainSchedule {
+  id                  String   @id @default(uuid())
+  trainNumber         String
+  departureStationId  String
+  departureStation    Station  @relation("DepartureStation", fields: [departureStationId], references: [id])
+  arrivalStationId    String
+  arrivalStation      Station  @relation("ArrivalStation", fields: [arrivalStationId], references: [id])
+  departureTime       DateTime
+  arrivalTime         DateTime
+  departurePlatform   Int?
+  arrivalPlatform     Int?
+  createdAt           DateTime @default(now()) @map("created_at")
+  updatedAt           DateTime @updatedAt @map("updated_at")
+
+  @@map("train_schedules")
+}

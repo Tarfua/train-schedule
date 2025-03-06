@@ -5,6 +5,8 @@ import { AppService } from './app.service';
 import { PrismaModule } from './prisma/prisma.module';
 import { UserModule } from './user/user.module';
 import { AuthModule } from './auth/auth.module';
+import { TrainScheduleModule } from './train-schedule/train-schedule.module';
+import { StationModule } from './station/station.module';
 
 @Module({
   imports: [
@@ -15,6 +17,8 @@ import { AuthModule } from './auth/auth.module';
     PrismaModule,
     UserModule,
     AuthModule,
+    TrainScheduleModule,
+    StationModule,
   ],
   controllers: [AppController],
   providers: [AppService],
