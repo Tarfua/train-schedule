@@ -8,7 +8,7 @@ RUN apk add --no-cache python3 make g++
 
 # Copy configuration files first
 COPY package*.json ./
-COPY tsconfig*.json ./
+COPY tsconfig.json tsconfig.build.json ./
 COPY nest-cli.json ./
 
 # Show environment info
