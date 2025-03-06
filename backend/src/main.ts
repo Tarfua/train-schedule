@@ -6,9 +6,14 @@ async function bootstrap() {
   
   // Налаштування CORS для дозволу запитів з фронтенду
   app.enableCors({
-    origin: [process.env.FRONTEND_URL || 'http://localhost:3000', 'http://localhost'], // Дозволяємо запити з localhost без порту
+    origin: [
+      process.env.FRONTEND_URL || 'http://localhost:3000',
+      'http://localhost',
+      'https://train-schedule-nu.vercel.app'
+    ],
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     credentials: true,
+    allowedHeaders: ['Content-Type', 'Authorization', 'Accept'],
   });
   
   // Запуск сервера на порті 5000
