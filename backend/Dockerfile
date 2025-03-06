@@ -6,8 +6,9 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install ALL dependencies (including devDependencies)
-RUN npm install
+# Install dependencies with specific NPM flags for optimization
+RUN npm ci --only=production
+RUN npm ci
 
 # Copy prisma files and generate client
 COPY prisma ./prisma/
@@ -16,8 +17,8 @@ RUN npx prisma generate
 # Copy source code and configuration files
 COPY . .
 
-# Build application
-RUN npm run build
+# Build application with increased memory limit
+RUN NODE_OPTIONS="--max_old_space_size=2048" npm run build
 RUN ls -la dist/
 
 # Production stage
@@ -28,8 +29,8 @@ WORKDIR /app
 # Copy package files
 COPY package*.json ./
 
-# Install ONLY production dependencies
-RUN npm install --only=production
+# Install production dependencies with specific NPM flags
+RUN npm ci --only=production --no-optional
 
 # Copy necessary files from builder
 COPY --from=builder /app/dist ./dist
