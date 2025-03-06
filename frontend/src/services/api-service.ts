@@ -250,7 +250,8 @@ export class ApiService {
     const requestInit: RequestInit = {
       method,
       headers: mergedOptions.headers,
-      credentials: mergedOptions.withCredentials ? 'include' : 'same-origin',
+      credentials: 'include',
+      mode: 'cors',
       signal: mergedOptions.timeout 
         ? AbortSignal.timeout(mergedOptions.timeout || this.defaultTimeout) 
         : undefined
