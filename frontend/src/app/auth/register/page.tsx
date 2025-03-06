@@ -18,15 +18,11 @@ import {
 import { useAuth } from '@/contexts/auth-context';
 import { handleApiError } from '@/utils';
 
-/**
- * Сторінка реєстрації нових користувачів
- */
 const RegisterPage: React.FC = () => {
   const router = useRouter();
   const [apiError, setApiError] = useState<string>('');
   const { register, isLoading } = useAuth();
 
-  // Початкові значення форми
   const initialValues = {
     email: '',
     password: '',
@@ -52,7 +48,6 @@ const RegisterPage: React.FC = () => {
     }
   };
 
-  // Використання хука валідації форми
   const { 
     values, 
     errors, 
@@ -63,10 +58,6 @@ const RegisterPage: React.FC = () => {
     handleSubmit 
   } = useFormValidation(initialValues, validationRules);
 
-  /**
-   * Обробник відправлення форми
-   * @param formValues Значення полів форми
-   */
   const onSubmit = async (formValues: Record<string, string>): Promise<void> => {
     try {
       setApiError('');

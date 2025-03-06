@@ -6,9 +6,6 @@ export const metadata: Metadata = {
   description: 'Перегляд розкладу руху потягів по станціях',
 };
 
-/**
- * Макет для сторінки розкладу
- */
 export default function ScheduleLayout({
   children,
 }: {

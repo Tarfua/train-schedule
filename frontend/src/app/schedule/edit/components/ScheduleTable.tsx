@@ -3,7 +3,6 @@
 import React from 'react';
 import { TrainSchedule } from '@/types/train-schedule.types';
 
-// Розширюємо тип TrainSchedule для нашого використання
 interface ScheduleWithDisplayTime extends TrainSchedule {
   displayDepartureTime?: string;
   displayArrivalTime?: string;
@@ -16,9 +15,6 @@ interface ScheduleTableProps {
   isProcessing?: boolean;
 }
 
-/**
- * Компонент таблиці розкладів потягів для редагування
- */
 const ScheduleTable: React.FC<ScheduleTableProps> = ({ schedules, onEdit, onDelete, isProcessing = false }) => {
   return (
     <div className="bg-dark-800 rounded-lg overflow-hidden">

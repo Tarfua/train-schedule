@@ -11,9 +11,6 @@ interface StationSelectorProps {
   className?: string;
 }
 
-/**
- * Компонент для вибору станції з спливаючого вікна
- */
 const StationSelector: React.FC<StationSelectorProps> = ({
   selectedStation,
   stations,
@@ -26,7 +23,6 @@ const StationSelector: React.FC<StationSelectorProps> = ({
   const [isSearching, setIsSearching] = useState<boolean>(false);
   const modalRef = useRef<HTMLDivElement>(null);
 
-  // Пошук станцій при введенні тексту
   useEffect(() => {
     const searchStations = async () => {
       if (filterText.trim().length === 0) {
@@ -40,7 +36,6 @@ const StationSelector: React.FC<StationSelectorProps> = ({
           const results = await stationService.searchStations(filterText);
           setFilteredStations(results);
         } else {
-          // Локальна фільтрація для коротких запитів
           setFilteredStations(stations.filter(station => 
             station.name.toLowerCase().includes(filterText.toLowerCase())
           ));

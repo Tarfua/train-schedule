@@ -9,9 +9,6 @@ import ScheduleTable from './components/ScheduleTable';
 import { TrainScheduleDto } from '@/services/train-schedule-service';
 import { handleApiError } from '@/utils';
 
-/**
- * Сторінка редагування розкладу потягів
- */
 const ScheduleEditPage: React.FC = () => {
   const router = useRouter();
   
@@ -48,7 +45,6 @@ const ScheduleEditPage: React.FC = () => {
         const stationsData = await stationService.getStations();
         const schedulesData = await trainScheduleService.getTrainSchedules();
         
-        // Зберігаємо оригінальні дані, щоб мати доступ до повних дат при редагуванні
         setSchedules(schedulesData.map(schedule => ({
           ...schedule,
           // Форматуємо дату і час для відображення
@@ -68,12 +64,10 @@ const ScheduleEditPage: React.FC = () => {
     fetchData();
   }, []);
 
-  // Відкриття форми для додавання нового розкладу
   const handleAddSchedule = () => {
     setFormMode('add');
     resetForm();
-    
-    // Встановлюємо поточну дату за замовчуванням для нового розкладу
+
     const currentDate = new Date().toISOString().split('T')[0];
     setFormData(prev => ({
       ...prev,
@@ -84,21 +78,18 @@ const ScheduleEditPage: React.FC = () => {
     setIsFormOpen(true);
   };
 
-  // Відкриття форми для редагування існуючого розкладу
   const handleEditSchedule = (schedule: TrainSchedule) => {
     setFormMode('edit');
     setSelectedSchedule(schedule);
     
-    // Отримуємо дату та час з ISO рядка
-    // Використовуємо повний об'єкт Date з оригінального поля, не з відформатованого
     const departureDateObj = new Date(schedule.departureTime);
     const arrivalDateObj = new Date(schedule.arrivalTime);
     
-    // Отримуємо частину дати у форматі YYYY-MM-DD
+    // Отримання дати у форматі YYYY-MM-DD
     const departureDate = departureDateObj.toISOString().split('T')[0];
     const arrivalDate = arrivalDateObj.toISOString().split('T')[0];
     
-    // Форматуємо час у формат HH:MM
+    // Форматування часу у HH:MM
     const departureTime = 
       `${departureDateObj.getHours().toString().padStart(2, '0')}:${departureDateObj.getMinutes().toString().padStart(2, '0')}`;
     const arrivalTime = 

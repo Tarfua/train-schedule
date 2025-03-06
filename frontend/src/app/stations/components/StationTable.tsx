@@ -8,9 +8,6 @@ interface StationTableProps {
   isProcessing: boolean;
 }
 
-/**
- * Таблиця для відображення списку станцій
- */
 const StationTable: React.FC<StationTableProps> = ({ 
   stations, 
   onEdit, 

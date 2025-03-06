@@ -2,15 +2,11 @@
 
 import React, { useState, useEffect } from 'react';
 
-/**
- * Компонент для відображення поточного часу з автоматичним оновленням та індикацією
- */
 const CurrentTime: React.FC = () => {
   const [currentTime, setCurrentTime] = useState<string>('');
   const [blinkSeparator, setBlinkSeparator] = useState<boolean>(true);
 
   useEffect(() => {
-    // Форматування часу у формат HH:MM
     const formatTime = (): string => {
       const now = new Date();
       const hours = now.getHours().toString().padStart(2, '0');
@@ -18,13 +14,10 @@ const CurrentTime: React.FC = () => {
       return `${hours}${blinkSeparator ? ':' : ' '}${minutes}`;
     };
 
-    // Встановлення початкового часу
     setCurrentTime(formatTime());
 
-    // Оновлення часу кожну секунду
     const interval = setInterval(() => {
       setCurrentTime(formatTime());
-      // Інвертуємо стан мерехтіння двокрапки кожну секунду
       setBlinkSeparator(prev => !prev);
     }, 1000);
 

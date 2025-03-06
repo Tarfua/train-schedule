@@ -14,9 +14,6 @@ interface StationFormModalProps {
   error: string | null;
 }
 
-/**
- * Модальне вікно для додавання/редагування станції
- */
 const StationFormModal: React.FC<StationFormModalProps> = ({
   isOpen,
   mode,

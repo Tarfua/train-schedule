@@ -12,21 +12,15 @@ interface ScheduleTableProps {
   type: 'departures' | 'arrivals';
 }
 
-/**
- * Компонент для відображення таблиці розкладу потягів
- */
 const ScheduleTable: React.FC<ScheduleTableProps> = ({ title, schedules, type }) => {
   // Стан для сортування
   const [sortField, setSortField] = useState<SortField>('time');
   const [sortOrder, setSortOrder] = useState<SortOrder>('asc');
 
-  // Функція для перемикання сортування
   const toggleSort = (field: SortField): void => {
     if (sortField === field) {
-      // Якщо той самий стовпець, змінюємо порядок сортування
       setSortOrder(sortOrder === 'asc' ? 'desc' : 'asc');
     } else {
-      // Якщо новий стовпець, встановлюємо його та скидаємо порядок на asc
       setSortField(field);
       setSortOrder('asc');
     }

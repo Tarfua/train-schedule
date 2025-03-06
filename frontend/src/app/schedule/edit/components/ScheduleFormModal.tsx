@@ -28,9 +28,6 @@ interface ScheduleFormModalProps {
   onInputChange: (name: string, value: string) => void;
 }
 
-/**
- * Компонент модального вікна для форми редагування/додавання розкладу
- */
 const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   isOpen,
   mode,
@@ -42,7 +39,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   onClose,
   onInputChange
 }) => {
-  // Стан для селекторів станцій
   const [stationSelectors, setStationSelectors] = useState({
     departure: {
       isOpen: false,
@@ -58,7 +54,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     }
   });
   
-  // Референції для обробників кліків
   const departureRef = useRef<HTMLDivElement>(null);
   const arrivalRef = useRef<HTMLDivElement>(null);
   
@@ -67,7 +62,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     arrival: arrivalRef
   }), []);
   
-  // Функція оновлення стану селектора
   const updateSelector = useCallback((type: StationType, updates: Partial<typeof stationSelectors.departure>) => {
     setStationSelectors(prev => ({
       ...prev,
@@ -103,10 +97,10 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   const handleStationSelect = (type: StationType, station: Station) => {
     // Перевірка, чи вибрана станція не збігається з іншою вже вибраною станцією
     if (type === 'departure' && formData.arrivalStation && station.id === formData.arrivalStation.id) {
-      return; // Не дозволяємо вибрати станцію, яка вже вибрана як станція прибуття
+      return;
     }
     if (type === 'arrival' && formData.departureStation && station.id === formData.departureStation.id) {
-      return; // Не дозволяємо вибрати станцію, яка вже вибрана як станція відправлення
+      return;
     }
     
     if (type === 'departure') {
@@ -121,7 +115,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     });
   };
   
-  // Відображення селектора станції
   const renderStationSelector = (type: StationType, label: string) => {
     const selector = stationSelectors[type];
     const station = type === 'departure' ? formData.departureStation : formData.arrivalStation;
@@ -203,7 +196,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
           const results = await stationService.searchStations(searchText);
           updateSelector(type, { filteredStations: results });
         } else {
-          // Локальна фільтрація для коротких запитів
           const filtered = stations.filter(station => 
             station.name.toLowerCase().includes(searchText.toLowerCase())
           );
@@ -236,7 +228,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   
   // Функція для фільтрації станцій, виключаючи вже вибрані
   const filterStationsBySelected = useCallback((stationsList: Station[], type: StationType): Station[] => {
-    // Виключаємо станцію, яка вже вибрана в іншому селекторі
     if (type === 'departure' && formData.arrivalStation) {
       return stationsList.filter(s => s.id !== formData.arrivalStation!.id);
     }
@@ -253,7 +244,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   
   // Забезпечення коректності дат
   const handleDateChange = (type: 'departure' | 'arrival', date: string) => {
-    // Встановлюємо нову дату
     onInputChange(type === 'departure' ? 'departureDate' : 'arrivalDate', date);
     
     // Перевірка, що дата прибуття не раніше за дату відправлення
@@ -264,14 +254,12 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
       const departureDateObj = new Date(departureDate);
       const arrivalDateObj = new Date(arrivalDate);
       
-      // Якщо дата прибуття раніше за дату відправлення, автоматично змінюємо її
       if (arrivalDateObj < departureDateObj) {
         onInputChange('arrivalDate', departureDate);
       }
     }
   };
-  
-  // Встановлення мінімальної дати прибуття
+
   const minArrivalDate = formData.departureDate || '';
   
   // Отримання поточної дати у форматі YYYY-MM-DD
@@ -301,7 +289,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                 id="trainNumber"
                 value={formData.trainNumber}
                 onChange={(e) => {
-                  // Обмежуємо довжину номеру потяга до 10 символів
                   if (e.target.value.length <= 10) {
                     onInputChange('trainNumber', e.target.value);
                   }
@@ -362,7 +349,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                   id="departurePlatform"
                   value={formData.departurePlatform}
                   onChange={(e) => {
-                    // Обмежуємо значення колії до 30
                     const value = Number(e.target.value);
                     if (value <= 30 || e.target.value === '') {
                       onInputChange('departurePlatform', e.target.value);

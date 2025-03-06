@@ -8,9 +8,6 @@ import StationFormModal from './components/StationFormModal';
 import { useRouter } from 'next/navigation';
 import { handleApiError } from '@/utils';
 
-/**
- * Сторінка управління станціями
- */
 const StationsPage: React.FC = () => {
   const router = useRouter();
   
@@ -80,12 +77,10 @@ const StationsPage: React.FC = () => {
       setIsProcessing(true);
       await stationService.deleteStation(stationId);
       
-      // Оновлюємо локальний стан після успішного видалення
       setStations(prevStations => 
         prevStations.filter(station => station.id !== stationId)
       );
-      
-      // Показуємо повідомлення про успіх
+
       setError(null);
     } catch (err) {
       console.error('Помилка при видаленні станції:', err);
@@ -148,8 +143,7 @@ const StationsPage: React.FC = () => {
       } else {
         throw new Error('Не вдалося визначити ID станції для оновлення');
       }
-      
-      // Оновлюємо стан, залежно від режиму (додавання або редагування)
+
       if (formMode === 'add') {
         setStations(prevStations => [...prevStations, updatedStation]);
       } else {
@@ -160,7 +154,6 @@ const StationsPage: React.FC = () => {
         );
       }
       
-      // Очищення помилок
       setError(null);
     } catch (err) {
       console.error('Помилка при збереженні станції:', err);

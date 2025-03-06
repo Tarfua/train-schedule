@@ -11,21 +11,16 @@ import { useFormValidation, required, email, FormValues } from '../hooks/useForm
 import { useAuth } from '@/contexts/auth-context';
 import { handleApiError } from '@/utils';
 
-/**
- * Сторінка входу в систему
- */
 const LoginPage: React.FC = () => {
   const router = useRouter();
   const [apiError, setApiError] = useState<string>('');
   const { login, isLoading } = useAuth();
 
-  // Початкові значення форми
   const initialValues = {
     email: '',
     password: ''
   };
 
-  // Правила валідації форми
   const validationRules = {
     email: (value: string, values: FormValues) => {
       const requiredError = required('Email')(value, values);
@@ -35,7 +30,6 @@ const LoginPage: React.FC = () => {
     password: required('Пароль')
   };
 
-  // Використання хука валідації форми
   const { 
     values, 
     errors, 
@@ -46,10 +40,6 @@ const LoginPage: React.FC = () => {
     handleSubmit 
   } = useFormValidation(initialValues, validationRules);
 
-  /**
-   * Обробник відправлення форми
-   * @param formValues Значення полів форми
-   */
   const onSubmit = async (formValues: Record<string, string>): Promise<void> => {
     try {
       setApiError('');

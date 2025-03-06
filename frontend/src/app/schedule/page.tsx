@@ -9,13 +9,9 @@ import CurrentTime from './components/CurrentTime';
 import { useRouter } from 'next/navigation';
 import { handleApiError } from '@/utils';
 
-/**
- * Сторінка розкладу потягів
- */
 const SchedulePage: React.FC = () => {
   const router = useRouter();
   
-  // Стани для даних
   const [stations, setStations] = useState<Station[]>([]);
   const [schedules, setSchedules] = useState<TrainSchedule[]>([]);
   const [selectedStation, setSelectedStation] = useState<Station | null>(null);
@@ -30,7 +26,6 @@ const SchedulePage: React.FC = () => {
         const stationsData = await stationService.getStations();
         setStations(stationsData);
         
-        // Встановлюємо першу станцію як вибрану за замовчуванням
         if (stationsData.length > 0 && !selectedStation) {
           setSelectedStation(stationsData[0]);
           await fetchSchedules(stationsData[0].id);
@@ -52,7 +47,6 @@ const SchedulePage: React.FC = () => {
       setLoading(true);
       const schedulesData = await trainScheduleService.getScheduleByStation(stationId);
       
-      // Зберігаємо оригінальні дати/часи без форматування
       setSchedules(schedulesData);
     } catch (err) {
       console.error('Помилка при завантаженні розкладу:', err);
@@ -71,7 +65,6 @@ const SchedulePage: React.FC = () => {
   // Фільтрація розкладів на відправлення та прибуття
   const departureSchedules = schedules
     .filter(schedule => schedule.departureStationId === selectedStation?.id)
-    // Фільтруємо лише майбутні та нещодавні відправлення
     .filter(schedule => {
       const departureTime = new Date(schedule.departureTime);
       const now = new Date();
@@ -81,7 +74,6 @@ const SchedulePage: React.FC = () => {
   
   const arrivalSchedules = schedules
     .filter(schedule => schedule.arrivalStationId === selectedStation?.id)
-    // Фільтруємо лише майбутні та нещодавні прибуття
     .filter(schedule => {
       const arrivalTime = new Date(schedule.arrivalTime);
       const now = new Date();
@@ -89,7 +81,6 @@ const SchedulePage: React.FC = () => {
       return arrivalTime >= tenMinutesAgo;
     });
 
-  // Форматуємо час для відображення з датою
   const formattedDepartureSchedules = departureSchedules.map(schedule => ({
     ...schedule,
     departureTime: trainScheduleService.formatDateTime(schedule.departureTime),
