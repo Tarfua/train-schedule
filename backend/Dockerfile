@@ -6,59 +6,17 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Debug: Show initial state
-RUN echo "=== Initial directory state ===" && \
-    pwd && \
-    ls -la
-
-# Copy ALL config files first
-COPY package*.json tsconfig*.json nest-cli.json .prettierrc ./
-
-# Debug: Verify config files
-RUN echo "=== After copying config files ===" && \
-    ls -la && \
-    echo "=== Content of tsconfig.json ===" && \
-    cat tsconfig.json || echo "tsconfig.json not found!"
+# Copy all files
+COPY . .
 
 # Install dependencies
 RUN npm ci
-
-# Copy source files
-COPY src/ ./src/
-COPY prisma/ ./prisma/
-
-# Debug: Verify source files
-RUN echo "=== After copying source files ===" && \
-    ls -la && \
-    ls -la src/
-
-# Copy remaining files
-COPY . .
-
-# Final debug check
-RUN echo "=== Final state ===" && \
-    ls -la && \
-    echo "=== Content of tsconfig.json ===" && \
-    cat tsconfig.json || echo "tsconfig.json not found!"
-
-# Show environment info
-RUN node -v && npm -v && ls -la
 
 # Generate Prisma client
 RUN npx prisma generate
 
 # Build with NestJS CLI
-RUN npm run build \
-    || (echo "=== Build failed ===" \
-    && echo "=== Directory structure ===" \
-    && ls -la \
-    && echo "=== Content of tsconfig.json ===" \
-    && cat tsconfig.json \
-    && echo "=== src directory ===" \
-    && ls -la src \
-    && echo "=== NPM Debug Log ===" \
-    && find /root/.npm/_logs -type f -exec cat {} \; \
-    && exit 1)
+RUN npm run build
 
 # Production stage
 FROM node:20-alpine
