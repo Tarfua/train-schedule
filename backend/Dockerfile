@@ -6,18 +6,14 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Copy package files first
-COPY package*.json ./
-COPY tsconfig.json ./
+# Copy all files
+COPY . .
 
 # Show environment info
-RUN node -v && npm -v
+RUN node -v && npm -v && ls -la
 
 # Install dependencies
 RUN npm ci
-
-# Copy source files
-COPY . .
 
 # Generate Prisma client
 RUN npx prisma generate
