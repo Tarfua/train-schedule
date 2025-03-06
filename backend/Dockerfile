@@ -6,8 +6,9 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Copy all source files first
-COPY . .
+# Copy package files first
+COPY package*.json ./
+COPY tsconfig.json ./
 
 # Show environment info
 RUN node -v && npm -v
@@ -15,18 +16,19 @@ RUN node -v && npm -v
 # Install dependencies
 RUN npm ci
 
+# Copy source files
+COPY . .
+
 # Generate Prisma client
 RUN npx prisma generate
 
 # Build with NestJS CLI
 RUN npm run build \
     || (echo "=== Build failed ===" \
-    && echo "=== nest-cli.json ===" \
-    && cat nest-cli.json \
-    && echo "=== tsconfig.json ===" \
-    && cat tsconfig.json \
     && echo "=== Directory structure ===" \
     && ls -la \
+    && echo "=== Content of tsconfig.json ===" \
+    && cat tsconfig.json \
     && echo "=== src directory ===" \
     && ls -la src \
     && echo "=== NPM Debug Log ===" \
