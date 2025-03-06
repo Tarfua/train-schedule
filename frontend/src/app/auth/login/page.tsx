@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useRouter } from 'next/navigation';
 import Input from '@/components/ui/Input';
 import Button from '@/components/ui/Button';
 import AuthCard from '@/components/ui/AuthCard';
@@ -16,12 +16,8 @@ import { handleApiError } from '@/utils';
  */
 const LoginPage: React.FC = () => {
   const router = useRouter();
-  const searchParams = useSearchParams();
   const [apiError, setApiError] = useState<string>('');
   const { login, isLoading } = useAuth();
-
-  // Отримуємо URL для перенаправлення після входу
-  const callbackUrl = searchParams.get('callbackUrl') || '/';
 
   // Початкові значення форми
   const initialValues = {
@@ -58,7 +54,7 @@ const LoginPage: React.FC = () => {
     try {
       setApiError('');
       await login(formValues.email, formValues.password);
-      router.push(callbackUrl);
+      router.push('/');
     } catch (error) {
       console.error('Помилка входу:', error);
       setApiError(handleApiError(error, 'Невірний email або пароль'));
