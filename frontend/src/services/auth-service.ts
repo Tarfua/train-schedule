@@ -68,7 +68,7 @@ export class AuthService {
    */
   public async login(credentials: LoginCredentials): Promise<AuthResponse> {
     try {
-      // Бекенд повертає тільки токени
+      // Отримуємо токени
       const tokens = await this.apiService.post<AuthTokens, LoginCredentials>('/auth/login', credentials);
       if (!tokens) {
         throw new Error('Некоректна відповідь сервера: токени не отримано');
@@ -77,11 +77,8 @@ export class AuthService {
       // Зберігаємо токени
       this.saveTokens(tokens);
       
-      // Створюємо базову інформацію про користувача з email
-      const userData: UserData = {
-        id: 'user-id', // Буде замінено після реалізації ендпоінту на бекенді
-        email: credentials.email
-      };
+      // Отримуємо дані користувача
+      const userData = await this.getCurrentUser();
       
       // Повертаємо відповідь
       return {
@@ -101,7 +98,7 @@ export class AuthService {
    */
   public async register(data: RegisterData): Promise<AuthResponse> {
     try {
-      // Бекенд повертає тільки токени
+      // Отримуємо токени
       const tokens = await this.apiService.post<AuthTokens, RegisterData>('/auth/register', data);
       if (!tokens) {
         throw new Error('Некоректна відповідь сервера: токени не отримано');
@@ -110,11 +107,8 @@ export class AuthService {
       // Зберігаємо токени
       this.saveTokens(tokens);
       
-      // Створюємо базову інформацію про користувача з email
-      const userData: UserData = {
-        id: 'user-id', // Буде замінено після реалізації ендпоінту на бекенді
-        email: data.email
-      };
+      // Отримуємо дані користувача
+      const userData = await this.getCurrentUser();
       
       // Повертаємо відповідь
       return {
@@ -144,34 +138,35 @@ export class AuthService {
   }
 
   /**
-   * Оновлює токени автентифікації
-   * @returns Нові токени
-   */
-  public async refreshTokens(): Promise<AuthTokens> {
-    const refreshToken = this.getRefreshToken();
-    if (!refreshToken) {
-      throw new Error('Refresh token не знайдено');
-    }
-
-    const response = await this.apiService.post<AuthTokens>('/auth/refresh', { refreshToken });
-    this.saveTokens(response);
-    return response;
-  }
-
-  /**
-   * Отримує дані поточного користувача
-   * @returns Дані користувача
-   */
-  public async getCurrentUser(): Promise<UserData> {
-    return this.apiService.get<UserData>('/auth/me');
-  }
-
-  /**
-   * Перевіряє, чи користувач авторизований
-   * @returns true, якщо користувач авторизований
+   * Перевіряє чи користувач автентифікований
+   * @returns true якщо користувач автентифікований
    */
   public isAuthenticated(): boolean {
-    return !!this.getAccessToken();
+    const accessToken = this.getAccessToken();
+    if (!accessToken) return false;
+    
+    try {
+      const payload = JSON.parse(atob(accessToken.split('.')[1]));
+      const expirationTime = payload.exp * 1000;
+      return Date.now() < expirationTime;
+    } catch {
+      return false;
+    }
+  }
+
+  /**
+   * Отримує час життя токена в секундах
+   * @param token JWT токен
+   * @returns Час життя в секундах або null якщо токен невалідний
+   */
+  public getTokenLifetime(token: string): number | null {
+    try {
+      const payload = JSON.parse(atob(token.split('.')[1]));
+      const expirationTime = payload.exp * 1000;
+      return Math.floor((expirationTime - Date.now()) / 1000);
+    } catch {
+      return null;
+    }
   }
 
   /**
@@ -227,6 +222,34 @@ export class AuthService {
     // Очищаємо cookies
     Cookies.remove(ACCESS_TOKEN_KEY);
     Cookies.remove(REFRESH_TOKEN_KEY);
+  }
+
+  /**
+   * Оновлює токени автентифікації
+   * @returns Нові токени
+   */
+  public async refreshTokens(): Promise<AuthTokens> {
+    const refreshToken = this.getRefreshToken();
+    if (!refreshToken) {
+      throw new Error('Refresh token не знайдено');
+    }
+
+    try {
+      const response = await this.apiService.post<AuthTokens>('/auth/refresh', { refreshToken });
+      this.saveTokens(response);
+      return response;
+    } catch (error) {
+      this.clearTokens();
+      throw error;
+    }
+  }
+
+  /**
+   * Отримує дані поточного користувача
+   * @returns Дані користувача
+   */
+  public async getCurrentUser(): Promise<UserData> {
+    return this.apiService.get<UserData>('/auth/me');
   }
 }
 

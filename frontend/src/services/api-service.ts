@@ -7,6 +7,8 @@ import {
   PaginatedResponse,
   PaginationParams
 } from './api-types';
+import { AuthInterceptor } from './auth-interceptor';
+import { AuthService } from './auth-service';
 
 /**
  * Основний API сервіс для взаємодії з бекендом
@@ -16,6 +18,7 @@ export class ApiService {
   private readonly baseUrl: string;
   private readonly defaultHeaders: Record<string, string>;
   private readonly defaultTimeout: number;
+  private readonly authInterceptor: AuthInterceptor;
 
   /**
    * Створює новий екземпляр ApiService
@@ -29,11 +32,13 @@ export class ApiService {
       'Content-Type': 'application/json',
       'Accept': 'application/json'
     },
-    defaultTimeout: number = 30000
+    defaultTimeout: number = 30000,
+    authService?: AuthService
   ) {
     this.baseUrl = baseUrl;
     this.defaultHeaders = defaultHeaders;
     this.defaultTimeout = defaultTimeout;
+    this.authInterceptor = new AuthInterceptor(authService || new AuthService(this));
   }
 
   /**
@@ -211,18 +216,9 @@ export class ApiService {
    * @param headers Початкові заголовки
    * @returns Заголовки з доданою авторизацією
    */
-  private addAuthorizationHeader(headers: Record<string, string>): Record<string, string> {
-    const newHeaders = { ...headers };
-    
-    // Отримуємо токен з localStorage
-    if (typeof window !== 'undefined') {
-      const token = localStorage.getItem('auth_access_token');
-      if (token) {
-        newHeaders['Authorization'] = `Bearer ${token}`;
-      }
-    }
-    
-    return newHeaders;
+  private async addAuthorizationHeader(headers: Record<string, string>): Promise<Record<string, string>> {
+    const config = await this.authInterceptor.interceptRequest({ headers });
+    return config.headers || headers;
   }
 
   /**
@@ -241,7 +237,7 @@ export class ApiService {
   ): Promise<T> {
     const mergedOptions: ApiRequestOptions = {
       ...options,
-      headers: this.addAuthorizationHeader({
+      headers: await this.addAuthorizationHeader({
         ...this.defaultHeaders,
         ...options?.headers
       })

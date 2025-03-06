@@ -57,6 +57,17 @@ export class AuthService {
     }
   }
 
+  async getCurrentUser(userId: string): Promise<{ id: string; email: string }> {
+    const user = await this.userService.findById(userId);
+    if (!user) {
+      throw new UnauthorizedException('Користувача не знайдено');
+    }
+    return {
+      id: user.id,
+      email: user.email
+    };
+  }
+
   private async generateTokens(userId: string, email: string): Promise<{ accessToken: string; refreshToken: string }> {
     const [accessToken, refreshToken] = await Promise.all([
       this.jwtService.signAsync(

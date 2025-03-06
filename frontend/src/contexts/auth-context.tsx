@@ -35,39 +35,8 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
         return;
       }
 
-      const accessToken = authService.getAccessToken();
-      if (!accessToken) {
-        await authService.logout();
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      // Декодуємо JWT токен
-      const tokenParts = accessToken.split('.');
-      if (tokenParts.length !== 3) {
-        await authService.logout();
-        setUser(null);
-        setIsLoading(false);
-        return;
-      }
-
-      try {
-        const payload = JSON.parse(atob(tokenParts[1]));
-        if (payload && payload.email) {
-          setUser({
-            id: payload.sub || 'user-id',
-            email: payload.email
-          });
-        } else {
-          await authService.logout();
-          setUser(null);
-        }
-      } catch (e) {
-        console.error('Помилка при декодуванні токена:', e);
-        await authService.logout();
-        setUser(null);
-      }
+      const userData = await authService.getCurrentUser();
+      setUser(userData);
     } catch (error) {
       console.error('Помилка при отриманні даних користувача:', error);
       await authService.logout();
@@ -75,11 +44,28 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
     } finally {
       setIsLoading(false);
     }
-  }, [authService]); // Тепер залежить тільки від authService, який не змінюється
+  }, [authService]);
 
+  // Перевіряємо стан автентифікації при завантаженні
   useEffect(() => {
     fetchUser();
   }, [fetchUser]);
+
+  // Періодично перевіряємо стан токена
+  useEffect(() => {
+    if (!user) return;
+
+    const checkTokenInterval = setInterval(() => {
+      if (!authService.isAuthenticated()) {
+        authService.logout().then(() => {
+          setUser(null);
+          router.push('/login');
+        });
+      }
+    }, 60000); // Перевіряємо кожну хвилину
+
+    return () => clearInterval(checkTokenInterval);
+  }, [user, authService, router]);
 
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);
