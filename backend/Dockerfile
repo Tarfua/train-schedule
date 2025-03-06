@@ -6,52 +6,63 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Copy package files
+# Copy configuration files first
 COPY package*.json ./
+COPY tsconfig*.json ./
+COPY nest-cli.json ./
 
-# Install ALL dependencies first (including dev dependencies)
+# Show environment info
+RUN node -v && npm -v
+
+# Install dependencies
 RUN npm ci
 
-# Copy prisma files and generate client
-COPY prisma ./prisma/
+# Copy source and prisma files
+COPY prisma ./prisma
+COPY src ./src
+
+# Generate Prisma client
 RUN npx prisma generate
 
-# Copy source code and configuration files
+# Copy remaining files
 COPY . .
 
-# Debug information
-RUN npm config list
-RUN node -v
-RUN npm -v
-RUN ls -la
-
-# Build application with increased memory limit and verbose output
-RUN npm run build --verbose
-
-# Check build output
-RUN ls -la dist/
+# Build with NestJS CLI
+RUN npm run build \
+    || (echo "=== Build failed ===" \
+    && echo "=== nest-cli.json ===" \
+    && cat nest-cli.json \
+    && echo "=== tsconfig.json ===" \
+    && cat tsconfig.json \
+    && echo "=== Directory structure ===" \
+    && ls -la \
+    && echo "=== src directory ===" \
+    && ls -la src \
+    && echo "=== NPM Debug Log ===" \
+    && find /root/.npm/_logs -type f -exec cat {} \; \
+    && exit 1)
 
 # Production stage
 FROM node:20-alpine
 
 WORKDIR /app
 
-# Copy package files
+# Copy package files and install production dependencies
 COPY package*.json ./
+RUN npm ci --only=production
 
-# Install ONLY production dependencies
-RUN npm ci --only=production --ignore-scripts
-
-# Copy necessary files from builder
-COPY --from=builder /app/dist ./dist
+# Copy Prisma files
+COPY prisma ./prisma
 COPY --from=builder /app/node_modules/.prisma ./node_modules/.prisma
-COPY --from=builder /app/prisma ./prisma
+
+# Copy built application
+COPY --from=builder /app/dist ./dist
 
 # Generate Prisma client in production
 RUN npx prisma generate
 
-# Copy environment file
-COPY .env.production .env
+# Copy environment file if exists
+RUN if [ -f .env.production ]; then cp .env.production .env; fi
 
 EXPOSE 5000
 
