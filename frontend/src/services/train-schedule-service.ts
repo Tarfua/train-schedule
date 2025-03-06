@@ -186,7 +186,6 @@ export class TrainScheduleService {
    */
   public formatDateTime(dateString: string): string {
     try {
-      const date = new Date(dateString);
       const formattedDate = this.formatDate(dateString);
       const formattedTime = this.formatTime(dateString);
       return `${formattedDate} ${formattedTime}`;

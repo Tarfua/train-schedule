@@ -1,6 +1,6 @@
 'use client';
 
-import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
+import { createContext, useContext, useEffect, useState, ReactNode, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserData, createAuthService } from '@/services/auth-service';
 
@@ -25,7 +25,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
   const authService = createAuthService();
   const router = useRouter();
 
-  const fetchUser = async (): Promise<void> => {
+  const fetchUser = useCallback(async (): Promise<void> => {
     try {
       if (authService.isAuthenticated()) {
         // Тимчасове рішення, поки немає ендпоінту для отримання даних користувача
@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [authService, setUser]);
 
   useEffect(() => {
     fetchUser();

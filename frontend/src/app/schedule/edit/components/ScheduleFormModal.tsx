@@ -64,24 +64,32 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     arrival: useRef<HTMLDivElement>(null)
   };
   
+  // Функція оновлення стану селектора
+  const updateSelector = useCallback((type: StationType, updates: Partial<typeof stationSelectors.departure>) => {
+    setStationSelectors(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        ...updates
+      }
+    }));
+  }, []);
+  
   // Обробник кліку поза випадаючими списками
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent) => {
-      ['departure', 'arrival'].forEach((type) => {
-        const selectorType = type as StationType;
-        if (
-          dropdownRefs[selectorType].current && 
-          !dropdownRefs[selectorType].current!.contains(event.target as Node) &&
-          stationSelectors[selectorType].isOpen
-        ) {
-          updateSelector(selectorType, { isOpen: false });
+      if (!event.target) return;
+      
+      Object.entries(dropdownRefs).forEach(([type, ref]) => {
+        if (ref.current && !ref.current.contains(event.target as Node)) {
+          updateSelector(type as StationType, { isOpen: false });
         }
       });
     };
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [stationSelectors]);
+  }, [stationSelectors, dropdownRefs, updateSelector]);
   
   // Обробник для введення тексту пошуку
   const handleSearchChange = (type: StationType, value: string) => {
@@ -221,7 +229,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
       clearTimeout(departureTimer);
       clearTimeout(arrivalTimer);
     };
-  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations]);
+  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations, stationSelectors, updateSelector]);
   
   // Функція для фільтрації станцій, виключаючи вже вибрані
   const filterStationsBySelected = useCallback((stationsList: Station[], type: StationType): Station[] => {
@@ -259,17 +267,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
       }
     }));
   }, [stations]);
-  
-  // Оновлення стану селектора
-  const updateSelector = (type: StationType, updates: Partial<typeof stationSelectors.departure>) => {
-    setStationSelectors(prev => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        ...updates
-      }
-    }));
-  };
   
   // Для відображення правильного списку станцій
   const getFilteredStationsForType = (type: StationType) => {
