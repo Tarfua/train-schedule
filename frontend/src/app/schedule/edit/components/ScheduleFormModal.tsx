@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useEffect, useRef, useState } from 'react';
+import React, { useEffect, useRef, useState, useCallback, useMemo } from 'react';
 import { Station } from '@/types/train-schedule.types';
 import { stationService } from '@/services';
 
@@ -81,64 +81,6 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     return () => document.removeEventListener('mousedown', handleClickOutside);
   }, [stationSelectors]);
   
-  // Оновлення стану селектора
-  const updateSelector = (type: StationType, updates: Partial<typeof stationSelectors.departure>) => {
-    setStationSelectors(prev => ({
-      ...prev,
-      [type]: {
-        ...prev[type],
-        ...updates
-      }
-    }));
-  };
-  
-  // Пошук станцій
-  useEffect(() => {
-    const searchStations = async (type: StationType) => {
-      const searchText = stationSelectors[type].search;
-      
-      if (searchText.trim().length === 0) {
-        updateSelector(type, { filteredStations: stations });
-        return;
-      }
-      
-      updateSelector(type, { isSearching: true });
-      try {
-        if (searchText.length >= 2) {
-          const results = await stationService.searchStations(searchText);
-          updateSelector(type, { filteredStations: results });
-        } else {
-          // Локальна фільтрація для коротких запитів
-          const filtered = stations.filter(station => 
-            station.name.toLowerCase().includes(searchText.toLowerCase())
-          );
-          updateSelector(type, { filteredStations: filtered });
-        }
-      } catch (error) {
-        console.error(`Помилка при пошуку станцій для ${type}:`, error);
-      } finally {
-        updateSelector(type, { isSearching: false });
-      }
-    };
-
-    const departureTimer = setTimeout(() => {
-      if (stationSelectors.departure.search) {
-        searchStations('departure');
-      }
-    }, 300);
-    
-    const arrivalTimer = setTimeout(() => {
-      if (stationSelectors.arrival.search) {
-        searchStations('arrival');
-      }
-    }, 300);
-
-    return () => {
-      clearTimeout(departureTimer);
-      clearTimeout(arrivalTimer);
-    };
-  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations]);
-  
   // Обробник для введення тексту пошуку
   const handleSearchChange = (type: StationType, value: string) => {
     updateSelector(type, { search: value });
@@ -146,6 +88,14 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   
   // Обробники вибору станції
   const handleStationSelect = (type: StationType, station: Station) => {
+    // Перевірка, чи вибрана станція не збігається з іншою вже вибраною станцією
+    if (type === 'departure' && formData.arrivalStation && station.id === formData.arrivalStation.id) {
+      return; // Не дозволяємо вибрати станцію, яка вже вибрана як станція прибуття
+    }
+    if (type === 'arrival' && formData.departureStation && station.id === formData.departureStation.id) {
+      return; // Не дозволяємо вибрати станцію, яка вже вибрана як станція відправлення
+    }
+    
     if (type === 'departure') {
       onDepartureStationSelect(station);
     } else {
@@ -200,7 +150,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                   </div>
                 ) : (
                   <ul className="py-1">
-                    {selector.filteredStations.map((station) => (
+                    {getFilteredStationsForType(type).map((station) => (
                       <li key={station.id}>
                         <button
                           type="button"
@@ -211,7 +161,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                         </button>
                       </li>
                     ))}
-                    {selector.filteredStations.length === 0 && (
+                    {getFilteredStationsForType(type).length === 0 && (
                       <li className="px-3 py-2 text-accent-muted">Станції не знайдено</li>
                     )}
                   </ul>
@@ -222,6 +172,106 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
         </div>
       </div>
     );
+  };
+  
+  // Пошук станцій
+  useEffect(() => {
+    const searchStations = async (type: StationType) => {
+      const searchText = stationSelectors[type].search;
+      
+      if (searchText.trim().length === 0) {
+        updateSelector(type, { filteredStations: stations });
+        return;
+      }
+      
+      updateSelector(type, { isSearching: true });
+      try {
+        if (searchText.length >= 2) {
+          const results = await stationService.searchStations(searchText);
+          updateSelector(type, { filteredStations: results });
+        } else {
+          // Локальна фільтрація для коротких запитів
+          const filtered = stations.filter(station => 
+            station.name.toLowerCase().includes(searchText.toLowerCase())
+          );
+          updateSelector(type, { filteredStations: filtered });
+        }
+      } catch (error) {
+        console.error(`Помилка при пошуку станцій для ${type}:`, error);
+      } finally {
+        updateSelector(type, { isSearching: false });
+      }
+    };
+
+    const departureTimer = setTimeout(() => {
+      if (stationSelectors.departure.search) {
+        searchStations('departure');
+      }
+    }, 300);
+    
+    const arrivalTimer = setTimeout(() => {
+      if (stationSelectors.arrival.search) {
+        searchStations('arrival');
+      }
+    }, 300);
+
+    return () => {
+      clearTimeout(departureTimer);
+      clearTimeout(arrivalTimer);
+    };
+  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations]);
+  
+  // Функція для фільтрації станцій, виключаючи вже вибрані
+  const filterStationsBySelected = useCallback((stationsList: Station[], type: StationType): Station[] => {
+    // Виключаємо станцію, яка вже вибрана в іншому селекторі
+    if (type === 'departure' && formData.arrivalStation) {
+      return stationsList.filter(s => s.id !== formData.arrivalStation!.id);
+    }
+    if (type === 'arrival' && formData.departureStation) {
+      return stationsList.filter(s => s.id !== formData.departureStation!.id);
+    }
+    return stationsList;
+  }, [formData.departureStation, formData.arrivalStation]);
+  
+  // Оптимізовані відфільтровані списки станцій за допомогою useMemo
+  const filteredDepartureStations = useMemo(() => 
+    filterStationsBySelected(stationSelectors.departure.filteredStations, 'departure'),
+    [filterStationsBySelected, stationSelectors.departure.filteredStations]
+  );
+  
+  const filteredArrivalStations = useMemo(() => 
+    filterStationsBySelected(stationSelectors.arrival.filteredStations, 'arrival'),
+    [filterStationsBySelected, stationSelectors.arrival.filteredStations]
+  );
+  
+  // Оновлюємо фільтрований список станцій при зміні основного списку
+  useEffect(() => {
+    setStationSelectors(prev => ({
+      departure: {
+        ...prev.departure,
+        filteredStations: stations
+      },
+      arrival: {
+        ...prev.arrival,
+        filteredStations: stations
+      }
+    }));
+  }, [stations]);
+  
+  // Оновлення стану селектора
+  const updateSelector = (type: StationType, updates: Partial<typeof stationSelectors.departure>) => {
+    setStationSelectors(prev => ({
+      ...prev,
+      [type]: {
+        ...prev[type],
+        ...updates
+      }
+    }));
+  };
+  
+  // Для відображення правильного списку станцій
+  const getFilteredStationsForType = (type: StationType) => {
+    return type === 'departure' ? filteredDepartureStations : filteredArrivalStations;
   };
   
   if (!isOpen) return null;
@@ -244,9 +294,15 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                 type="text"
                 id="trainNumber"
                 value={formData.trainNumber}
-                onChange={(e) => onInputChange('trainNumber', e.target.value)}
+                onChange={(e) => {
+                  // Обмежуємо довжину номеру потяга до 10 символів
+                  if (e.target.value.length <= 10) {
+                    onInputChange('trainNumber', e.target.value);
+                  }
+                }}
                 className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
                 placeholder="Наприклад: 123"
+                maxLength={10}
                 required
               />
             </div>
@@ -294,10 +350,17 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                 type="number"
                 id="departurePlatform"
                 value={formData.departurePlatform}
-                onChange={(e) => onInputChange('departurePlatform', e.target.value)}
+                onChange={(e) => {
+                  // Обмежуємо значення колії до 30
+                  const value = Number(e.target.value);
+                  if (value <= 30 || e.target.value === '') {
+                    onInputChange('departurePlatform', e.target.value);
+                  }
+                }}
                 className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
                 placeholder="Наприклад: 1"
                 min="1"
+                max="30"
               />
             </div>
             
@@ -310,10 +373,17 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
                 type="number"
                 id="arrivalPlatform"
                 value={formData.arrivalPlatform}
-                onChange={(e) => onInputChange('arrivalPlatform', e.target.value)}
+                onChange={(e) => {
+                  // Обмежуємо значення колії до 30
+                  const value = Number(e.target.value);
+                  if (value <= 30 || e.target.value === '') {
+                    onInputChange('arrivalPlatform', e.target.value);
+                  }
+                }}
                 className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
                 placeholder="Наприклад: 1"
                 min="1"
+                max="30"
               />
             </div>
           </div>

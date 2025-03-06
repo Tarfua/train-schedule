@@ -1,4 +1,4 @@
-import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID } from 'class-validator';
+import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID, MaxLength, Max } from 'class-validator';
 
 /**
  * DTO для створення нового запису розкладу потяга
@@ -6,6 +6,7 @@ import { IsDateString, IsInt, IsNotEmpty, IsOptional, IsString, IsUUID } from 'c
 export class CreateTrainScheduleDto {
   @IsString()
   @IsNotEmpty()
+  @MaxLength(10, { message: 'Номер потяга не може перевищувати 10 символів' })
   readonly trainNumber: string;
 
   @IsUUID()
@@ -26,9 +27,11 @@ export class CreateTrainScheduleDto {
 
   @IsOptional()
   @IsInt()
+  @Max(30, { message: 'Номер колії не може перевищувати 30' })
   readonly departurePlatform?: number;
 
   @IsOptional()
   @IsInt()
+  @Max(30, { message: 'Номер колії не може перевищувати 30' })
   readonly arrivalPlatform?: number;
 } 
