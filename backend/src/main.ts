@@ -9,9 +9,19 @@ async function bootstrap() {
     console.warn('FRONTEND_URL не встановлено в змінних середовища. CORS буде дозволено тільки для localhost:3000');
   }
   
+  const allowedOrigins = [
+    'http://localhost:3000',
+    'https://train-schedule-nu.vercel.app',
+    'https://train-schedule-nu.vercel.app/',
+  ];
+  
+  if (frontendUrl) {
+    allowedOrigins.push(frontendUrl);
+  }
+  
   // Налаштування CORS для дозволу запитів з фронтенду
   app.enableCors({
-    origin: frontendUrl || 'http://localhost:3000',
+    origin: allowedOrigins,
     credentials: true,
     methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
     allowedHeaders: ['Content-Type', 'Authorization', 'Accept', 'Origin', 'X-Requested-With'],
