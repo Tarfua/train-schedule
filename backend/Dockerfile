@@ -6,25 +6,40 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Debug: Show current directory
-RUN pwd && ls -la
+# Debug: Show initial state
+RUN echo "=== Initial directory state ===" && \
+    pwd && \
+    ls -la
 
-# Copy package files first
-COPY package*.json ./
-COPY tsconfig*.json ./
-COPY nest-cli.json ./
+# Copy ALL config files first
+COPY package*.json tsconfig*.json nest-cli.json .prettierrc ./
 
-# Debug: Show copied files
-RUN echo "=== Files after initial copy ===" && ls -la
+# Debug: Verify config files
+RUN echo "=== After copying config files ===" && \
+    ls -la && \
+    echo "=== Content of tsconfig.json ===" && \
+    cat tsconfig.json || echo "tsconfig.json not found!"
 
 # Install dependencies
 RUN npm ci
 
-# Copy all remaining files
+# Copy source files
+COPY src/ ./src/
+COPY prisma/ ./prisma/
+
+# Debug: Verify source files
+RUN echo "=== After copying source files ===" && \
+    ls -la && \
+    ls -la src/
+
+# Copy remaining files
 COPY . .
 
-# Debug: Show all files
-RUN echo "=== Files after full copy ===" && ls -la
+# Final debug check
+RUN echo "=== Final state ===" && \
+    ls -la && \
+    echo "=== Content of tsconfig.json ===" && \
+    cat tsconfig.json || echo "tsconfig.json not found!"
 
 # Show environment info
 RUN node -v && npm -v && ls -la
