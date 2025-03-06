@@ -59,10 +59,10 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
   });
   
   // Референції для обробників кліків
-  const dropdownRefs = {
+  const dropdownRefs = useMemo(() => ({
     departure: useRef<HTMLDivElement>(null),
     arrival: useRef<HTMLDivElement>(null)
-  };
+  }), []);
   
   // Функція оновлення стану селектора
   const updateSelector = useCallback((type: StationType, updates: Partial<typeof stationSelectors.departure>) => {
@@ -89,7 +89,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     
     document.addEventListener('mousedown', handleClickOutside);
     return () => document.removeEventListener('mousedown', handleClickOutside);
-  }, [stationSelectors, dropdownRefs, updateSelector]);
+  }, [dropdownRefs, updateSelector]);
   
   // Обробник для введення тексту пошуку
   const handleSearchChange = (type: StationType, value: string) => {
@@ -229,7 +229,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
       clearTimeout(departureTimer);
       clearTimeout(arrivalTimer);
     };
-  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations, stationSelectors, updateSelector]);
+  }, [stationSelectors.departure.search, stationSelectors.arrival.search, stations, updateSelector]);
   
   // Функція для фільтрації станцій, виключаючи вже вибрані
   const filterStationsBySelected = useCallback((stationsList: Station[], type: StationType): Station[] => {
@@ -243,35 +243,10 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     return stationsList;
   }, [formData.departureStation, formData.arrivalStation]);
   
-  // Оптимізовані відфільтровані списки станцій за допомогою useMemo
-  const filteredDepartureStations = useMemo(() => 
-    filterStationsBySelected(stationSelectors.departure.filteredStations, 'departure'),
-    [filterStationsBySelected, stationSelectors.departure.filteredStations]
-  );
-  
-  const filteredArrivalStations = useMemo(() => 
-    filterStationsBySelected(stationSelectors.arrival.filteredStations, 'arrival'),
-    [filterStationsBySelected, stationSelectors.arrival.filteredStations]
-  );
-  
-  // Оновлюємо фільтрований список станцій при зміні основного списку
-  useEffect(() => {
-    setStationSelectors(prev => ({
-      departure: {
-        ...prev.departure,
-        filteredStations: stations
-      },
-      arrival: {
-        ...prev.arrival,
-        filteredStations: stations
-      }
-    }));
-  }, [stations]);
-  
-  // Для відображення правильного списку станцій
-  const getFilteredStationsForType = (type: StationType) => {
-    return type === 'departure' ? filteredDepartureStations : filteredArrivalStations;
-  };
+  // Функція для отримання відфільтрованих станцій для конкретного типу
+  const getFilteredStationsForType = useCallback((type: StationType): Station[] => {
+    return filterStationsBySelected(stationSelectors[type].filteredStations, type);
+  }, [filterStationsBySelected, stationSelectors]);
   
   // Забезпечення коректності дат
   const handleDateChange = (type: 'departure' | 'arrival', date: string) => {
