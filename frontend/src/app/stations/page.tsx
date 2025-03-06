@@ -6,6 +6,7 @@ import { Station } from '@/types/train-schedule.types';
 import StationTable from './components/StationTable';
 import StationFormModal from './components/StationFormModal';
 import { useRouter } from 'next/navigation';
+import { handleApiError } from '@/utils';
 
 /**
  * Сторінка управління станціями
@@ -39,7 +40,7 @@ const StationsPage: React.FC = () => {
         setStations(stationsData);
       } catch (err) {
         console.error('Помилка при завантаженні станцій:', err);
-        setError('Не вдалося завантажити дані. Спробуйте пізніше.');
+        setError(handleApiError(err, 'Не вдалося завантажити дані. Спробуйте пізніше.'));
       } finally {
         setLoading(false);
       }
@@ -86,15 +87,9 @@ const StationsPage: React.FC = () => {
       
       // Показуємо повідомлення про успіх
       setError(null);
-    } catch (err: any) {
+    } catch (err) {
       console.error('Помилка при видаленні станції:', err);
-      
-      // Перевіряємо, чи є повідомлення про помилку від API
-      if (err.response && err.response.error && err.response.error.message) {
-        setError(err.response.error.message);
-      } else {
-        setError('Не вдалося видалити станцію. Спробуйте пізніше.');
-      }
+      setError(handleApiError(err, 'Не вдалося видалити станцію. Спробуйте пізніше.'));
     } finally {
       setIsProcessing(false);
     }
@@ -169,7 +164,7 @@ const StationsPage: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error('Помилка при збереженні станції:', err);
-      setError('Не вдалося зберегти станцію. Спробуйте пізніше.');
+      setError(handleApiError(err, 'Не вдалося зберегти станцію. Спробуйте пізніше.'));
     } finally {
       setIsProcessing(false);
       // Закриття форми після збереження

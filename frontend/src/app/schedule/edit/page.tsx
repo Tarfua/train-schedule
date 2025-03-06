@@ -7,6 +7,7 @@ import { useRouter } from 'next/navigation';
 import ScheduleFormModal from './components/ScheduleFormModal';
 import ScheduleTable from './components/ScheduleTable';
 import { TrainScheduleDto } from '@/services/train-schedule-service';
+import { handleApiError } from '@/utils';
 
 /**
  * Сторінка редагування розкладу потягів
@@ -106,7 +107,7 @@ const ScheduleEditPage: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error('Помилка при видаленні розкладу:', err);
-      setError('Не вдалося видалити розклад. Спробуйте пізніше.');
+      setError(handleApiError(err, 'Не вдалося видалити розклад. Спробуйте пізніше.'));
     } finally {
       setIsProcessing(false);
     }
@@ -198,7 +199,7 @@ const ScheduleEditPage: React.FC = () => {
       setError(null);
     } catch (err) {
       console.error('Помилка при збереженні розкладу:', err);
-      setError('Не вдалося зберегти розклад. Спробуйте пізніше.');
+      setError(handleApiError(err, 'Не вдалося зберегти розклад. Спробуйте пізніше.'));
     } finally {
       setIsProcessing(false);
       // Закриття форми після збереження

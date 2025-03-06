@@ -9,6 +9,7 @@ import AuthCard from '@/components/ui/AuthCard';
 import ErrorMessage from '@/components/ui/ErrorMessage';
 import { useFormValidation, required, email, FormValues } from '../hooks/useFormValidation';
 import { useAuth } from '@/contexts/auth-context';
+import { handleApiError } from '@/utils';
 
 /**
  * Сторінка входу в систему
@@ -60,11 +61,7 @@ const LoginPage: React.FC = () => {
       router.push(callbackUrl);
     } catch (error) {
       console.error('Помилка входу:', error);
-      if (error instanceof Error) {
-        setApiError(error.message || 'Невірний email або пароль');
-      } else {
-        setApiError('Невірний email або пароль');
-      }
+      setApiError(handleApiError(error, 'Невірний email або пароль'));
     }
   };
 

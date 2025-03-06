@@ -16,6 +16,7 @@ import {
   FormValues
 } from '../hooks/useFormValidation';
 import { useAuth } from '@/contexts/auth-context';
+import { handleApiError } from '@/utils';
 
 /**
  * Сторінка реєстрації нових користувачів
@@ -73,11 +74,7 @@ const RegisterPage: React.FC = () => {
       router.push('/');
     } catch (error) {
       console.error('Помилка реєстрації:', error);
-      if (error instanceof Error) {
-        setApiError(error.message || 'Помилка при створенні облікового запису');
-      } else {
-        setApiError('Помилка при створенні облікового запису');
-      }
+      setApiError(handleApiError(error, 'Помилка при створенні облікового запису'));
     }
   };
 

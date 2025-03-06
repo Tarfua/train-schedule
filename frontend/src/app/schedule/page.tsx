@@ -9,6 +9,7 @@ import StationSelector from './components/StationSelector';
 import ScheduleTable from './components/ScheduleTable';
 import CurrentTime from './components/CurrentTime';
 import { useRouter } from 'next/navigation';
+import { handleApiError } from '@/utils';
 
 /**
  * Сторінка розкладу потягів
@@ -38,7 +39,7 @@ const SchedulePage: React.FC = () => {
         }
       } catch (err) {
         console.error('Помилка при завантаженні станцій:', err);
-        setError('Не вдалося завантажити список станцій. Спробуйте пізніше.');
+        setError(handleApiError(err, 'Не вдалося завантажити список станцій. Спробуйте пізніше.'));
       } finally {
         setLoading(false);
       }
@@ -63,7 +64,7 @@ const SchedulePage: React.FC = () => {
       setSchedules(formattedSchedules);
     } catch (err) {
       console.error('Помилка при завантаженні розкладу:', err);
-      setError('Не вдалося завантажити розклад. Спробуйте пізніше.');
+      setError(handleApiError(err, 'Не вдалося завантажити розклад. Спробуйте пізніше.'));
     } finally {
       setLoading(false);
     }
