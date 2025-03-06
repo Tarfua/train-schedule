@@ -1,6 +1,25 @@
 version: '3.8'
 
 services:
+  backend:
+    container_name: train-schedule-backend
+    build:
+      context: .
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:postgres@postgres:5432/train_schedule
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+      - NODE_ENV=production
+    depends_on:
+      - postgres
+      - redis
+    networks:
+      - backend-network
+    restart: unless-stopped
+
   postgres:
     container_name: postgres
     image: postgres:16-alpine
