@@ -3,8 +3,6 @@
 import React, { useState, useEffect } from 'react';
 import { trainScheduleService, stationService } from '@/services';
 import { Station, TrainSchedule } from '@/types/train-schedule.types';
-import { format } from 'date-fns';
-import { uk } from 'date-fns/locale';
 import StationSelector from './components/StationSelector';
 import ScheduleTable from './components/ScheduleTable';
 import CurrentTime from './components/CurrentTime';
@@ -46,7 +44,7 @@ const SchedulePage: React.FC = () => {
     };
     
     fetchData();
-  }, []);
+  }, [selectedStation]);
 
   // Завантаження розкладу для конкретної станції
   const fetchSchedules = async (stationId: string) => {

@@ -2,7 +2,7 @@
 
 import { createContext, useContext, useEffect, useState, ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { AuthService, UserData, createAuthService } from '@/services/auth-service';
+import { UserData, createAuthService } from '@/services/auth-service';
 
 interface AuthContextType {
   user: UserData | null;
@@ -67,7 +67,7 @@ export const AuthProvider = ({ children }: AuthProviderProps): React.ReactElemen
 
   useEffect(() => {
     fetchUser();
-  }, []);
+  }, [fetchUser]);
 
   const login = async (email: string, password: string): Promise<void> => {
     setIsLoading(true);

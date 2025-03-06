@@ -1,7 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 
 // Шляхи, доступні без авторизації
-const publicPaths = ['/auth/login', '/auth/register', '/'];
+// const publicPaths = ['/auth/login', '/auth/register', '/'];
 
 // Шляхи, які потребують авторизації
 const authPaths = ['/schedule', '/stations'];

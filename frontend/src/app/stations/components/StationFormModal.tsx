@@ -1,5 +1,4 @@
 import React from 'react';
-import { Station } from '@/types/train-schedule.types';
 
 interface StationFormModalProps {
   isOpen: boolean;

@@ -17,10 +17,6 @@ export const UserMenu: React.FC<UserMenuProps> = ({ className = '' }) => {
   const router = useRouter();
   const menuRef = useRef<HTMLDivElement>(null);
 
-  if (!isAuthenticated || !user) {
-    return null;
-  }
-  
   // Закриття меню при кліку поза ним
   useEffect(() => {
     const handleClickOutside = (event: MouseEvent): void => {
@@ -35,6 +31,10 @@ export const UserMenu: React.FC<UserMenuProps> = ({ className = '' }) => {
     };
   }, []);
 
+  if (!isAuthenticated || !user) {
+    return null;
+  }
+  
   const handleLogout = async (): Promise<void> => {
     try {
       await logout();
