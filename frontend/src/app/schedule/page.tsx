@@ -54,14 +54,8 @@ const SchedulePage: React.FC = () => {
       setLoading(true);
       const schedulesData = await trainScheduleService.getScheduleByStation(stationId);
       
-      // Форматуємо час у формат HH:MM
-      const formattedSchedules = schedulesData.map(schedule => ({
-        ...schedule,
-        departureTime: trainScheduleService.formatTime(schedule.departureTime),
-        arrivalTime: trainScheduleService.formatTime(schedule.arrivalTime)
-      }));
-      
-      setSchedules(formattedSchedules);
+      // Зберігаємо оригінальні дати/часи без форматування
+      setSchedules(schedulesData);
     } catch (err) {
       console.error('Помилка при завантаженні розкладу:', err);
       setError(handleApiError(err, 'Не вдалося завантажити розклад. Спробуйте пізніше.'));
@@ -77,13 +71,38 @@ const SchedulePage: React.FC = () => {
   };
 
   // Фільтрація розкладів на відправлення та прибуття
-  const departureSchedules = schedules.filter(
-    schedule => schedule.departureStationId === selectedStation?.id
-  );
+  const departureSchedules = schedules
+    .filter(schedule => schedule.departureStationId === selectedStation?.id)
+    // Фільтруємо лише майбутні та нещодавні відправлення
+    .filter(schedule => {
+      const departureTime = new Date(schedule.departureTime);
+      const now = new Date();
+      const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+      return departureTime >= tenMinutesAgo;
+    });
   
-  const arrivalSchedules = schedules.filter(
-    schedule => schedule.arrivalStationId === selectedStation?.id
-  );
+  const arrivalSchedules = schedules
+    .filter(schedule => schedule.arrivalStationId === selectedStation?.id)
+    // Фільтруємо лише майбутні та нещодавні прибуття
+    .filter(schedule => {
+      const arrivalTime = new Date(schedule.arrivalTime);
+      const now = new Date();
+      const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+      return arrivalTime >= tenMinutesAgo;
+    });
+
+  // Форматуємо час для відображення з датою
+  const formattedDepartureSchedules = departureSchedules.map(schedule => ({
+    ...schedule,
+    departureTime: trainScheduleService.formatDateTime(schedule.departureTime),
+    arrivalTime: trainScheduleService.formatDateTime(schedule.arrivalTime)
+  }));
+
+  const formattedArrivalSchedules = arrivalSchedules.map(schedule => ({
+    ...schedule,
+    departureTime: trainScheduleService.formatDateTime(schedule.departureTime),
+    arrivalTime: trainScheduleService.formatDateTime(schedule.arrivalTime)
+  }));
 
   if (loading && !selectedStation) {
     return (
@@ -131,14 +150,14 @@ const SchedulePage: React.FC = () => {
           {/* Розклад відправлення */}
           <ScheduleTable 
             title="Відправлення" 
-            schedules={departureSchedules} 
+            schedules={formattedDepartureSchedules} 
             type="departures" 
           />
           
           {/* Розклад прибуття */}
           <ScheduleTable 
             title="Прибуття" 
-            schedules={arrivalSchedules} 
+            schedules={formattedArrivalSchedules} 
             type="arrivals" 
           />
         </div>

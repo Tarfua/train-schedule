@@ -13,7 +13,9 @@ interface ScheduleFormModalProps {
     trainNumber: string;
     departureStation: Station | null;
     arrivalStation: Station | null;
+    departureDate: string;
     departureTime: string;
+    arrivalDate: string;
     arrivalTime: string;
     departurePlatform: string;
     arrivalPlatform: string;
@@ -274,6 +276,35 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
     return type === 'departure' ? filteredDepartureStations : filteredArrivalStations;
   };
   
+  // Забезпечення коректності дат
+  const handleDateChange = (type: 'departure' | 'arrival', date: string) => {
+    // Встановлюємо нову дату
+    onInputChange(type === 'departure' ? 'departureDate' : 'arrivalDate', date);
+    
+    // Перевірка, що дата прибуття не раніше за дату відправлення
+    const departureDate = type === 'departure' ? date : formData.departureDate;
+    const arrivalDate = type === 'arrival' ? date : formData.arrivalDate;
+    
+    if (departureDate && arrivalDate) {
+      const departureDateObj = new Date(departureDate);
+      const arrivalDateObj = new Date(arrivalDate);
+      
+      // Якщо дата прибуття раніше за дату відправлення, автоматично змінюємо її
+      if (arrivalDateObj < departureDateObj) {
+        onInputChange('arrivalDate', departureDate);
+      }
+    }
+  };
+  
+  // Встановлення мінімальної дати прибуття
+  const minArrivalDate = formData.departureDate || '';
+  
+  // Отримання поточної дати у форматі YYYY-MM-DD
+  const getCurrentDate = () => {
+    const now = new Date();
+    return now.toISOString().split('T')[0];
+  };
+  
   if (!isOpen) return null;
   
   return (
@@ -284,7 +315,7 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
         </h3>
         
         <form onSubmit={onSave}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+          <div className="grid grid-cols-1 gap-4 mb-4">
             {/* Номер потяга */}
             <div>
               <label htmlFor="trainNumber" className="block mb-1 text-accent">
@@ -308,83 +339,123 @@ const ScheduleFormModal: React.FC<ScheduleFormModalProps> = ({
             </div>
             
             {/* Селектори станцій */}
-            {renderStationSelector('departure', 'Станція відправлення')}
-            {renderStationSelector('arrival', 'Станція прибуття')}
-            
-            {/* Час відправлення */}
-            <div>
-              <label htmlFor="departureTime" className="block mb-1 text-accent">
-                Час відправлення *
-              </label>
-              <input
-                type="time"
-                id="departureTime"
-                value={formData.departureTime}
-                onChange={(e) => onInputChange('departureTime', e.target.value)}
-                className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
-                required
-              />
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {renderStationSelector('departure', 'Станція відправлення')}
+              {renderStationSelector('arrival', 'Станція прибуття')}
             </div>
             
-            {/* Час прибуття */}
-            <div>
-              <label htmlFor="arrivalTime" className="block mb-1 text-accent">
-                Час прибуття *
-              </label>
-              <input
-                type="time"
-                id="arrivalTime"
-                value={formData.arrivalTime}
-                onChange={(e) => onInputChange('arrivalTime', e.target.value)}
-                className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
-                required
-              />
+            {/* Блок відправлення */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Дата відправлення */}
+              <div>
+                <label htmlFor="departureDate" className="block mb-1 text-accent">
+                  Дата відправлення *
+                </label>
+                <input
+                  type="date"
+                  id="departureDate"
+                  value={formData.departureDate}
+                  min={getCurrentDate()}
+                  onChange={(e) => handleDateChange('departure', e.target.value)}
+                  className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
+                  required
+                />
+              </div>
+              
+              {/* Час відправлення */}
+              <div>
+                <label htmlFor="departureTime" className="block mb-1 text-accent">
+                  Час відправлення *
+                </label>
+                <input
+                  type="time"
+                  id="departureTime"
+                  value={formData.departureTime}
+                  onChange={(e) => onInputChange('departureTime', e.target.value)}
+                  className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
+                  required
+                />
+              </div>
+              
+              {/* Колія відправлення */}
+              <div>
+                <label htmlFor="departurePlatform" className="block mb-1 text-accent">
+                  Колія відправлення
+                </label>
+                <input
+                  type="number"
+                  id="departurePlatform"
+                  value={formData.departurePlatform}
+                  onChange={(e) => {
+                    // Обмежуємо значення колії до 30
+                    const value = Number(e.target.value);
+                    if (value <= 30 || e.target.value === '') {
+                      onInputChange('departurePlatform', e.target.value);
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
+                  placeholder="Наприклад: 1"
+                  min="1"
+                  max="30"
+                />
+              </div>
             </div>
             
-            {/* Колія відправлення */}
-            <div>
-              <label htmlFor="departurePlatform" className="block mb-1 text-accent">
-                Колія відправлення
-              </label>
-              <input
-                type="number"
-                id="departurePlatform"
-                value={formData.departurePlatform}
-                onChange={(e) => {
-                  // Обмежуємо значення колії до 30
-                  const value = Number(e.target.value);
-                  if (value <= 30 || e.target.value === '') {
-                    onInputChange('departurePlatform', e.target.value);
-                  }
-                }}
-                className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
-                placeholder="Наприклад: 1"
-                min="1"
-                max="30"
-              />
-            </div>
-            
-            {/* Колія прибуття */}
-            <div>
-              <label htmlFor="arrivalPlatform" className="block mb-1 text-accent">
-                Колія прибуття
-              </label>
-              <input
-                type="number"
-                id="arrivalPlatform"
-                value={formData.arrivalPlatform}
-                onChange={(e) => {
-                  // Обмежуємо значення колії до 30
-                  const value = Number(e.target.value);
-                  if (value <= 30 || e.target.value === '') {
-                    onInputChange('arrivalPlatform', e.target.value);
-                  }
-                }}
-                className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
-                placeholder="Наприклад: 1"
-                min="1"
-                max="30"
-              />
+            {/* Блок прибуття */}
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+              {/* Дата прибуття */}
+              <div>
+                <label htmlFor="arrivalDate" className="block mb-1 text-accent">
+                  Дата прибуття *
+                </label>
+                <input
+                  type="date"
+                  id="arrivalDate"
+                  value={formData.arrivalDate}
+                  min={minArrivalDate || getCurrentDate()}
+                  onChange={(e) => handleDateChange('arrival', e.target.value)}
+                  className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
+                  required
+                />
+              </div>
+              
+              {/* Час прибуття */}
+              <div>
+                <label htmlFor="arrivalTime" className="block mb-1 text-accent">
+                  Час прибуття *
+                </label>
+                <input
+                  type="time"
+                  id="arrivalTime"
+                  value={formData.arrivalTime}
+                  onChange={(e) => onInputChange('arrivalTime', e.target.value)}
+                  className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
+                  required
+                />
+              </div>
+              
+              {/* Колія прибуття */}
+              <div>
+                <label htmlFor="arrivalPlatform" className="block mb-1 text-accent">
+                  Колія прибуття
+                </label>
+                <input
+                  type="number"
+                  id="arrivalPlatform"
+                  value={formData.arrivalPlatform}
+                  onChange={(e) => {
+                    // Обмежуємо значення колії до 30
+                    const value = Number(e.target.value);
+                    if (value <= 30 || e.target.value === '') {
+                      onInputChange('arrivalPlatform', e.target.value);
+                    }
+                  }}
+                  className="w-full p-2.5 rounded-md bg-dark-700 border border-dark-600 text-accent focus:ring-accent-hover focus:border-accent-hover outline-none"
+                  placeholder="Наприклад: 1"
+                  min="1"
+                  max="30"
+                />
+              </div>
             </div>
           </div>
           

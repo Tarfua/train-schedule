@@ -33,6 +33,16 @@ export class TrainScheduleService {
   }
 
   /**
+   * Перевірка валідності дат і часу
+   * @private
+   */
+  private validateDateTime(departureTime: Date, arrivalTime: Date): void {
+    if (departureTime >= arrivalTime) {
+      throw new BadRequestException('Час відправлення має бути раніше часу прибуття');
+    }
+  }
+
+  /**
    * Створити новий запис розкладу потяга
    */
   async create(data: CreateTrainScheduleDto) {
@@ -42,11 +52,17 @@ export class TrainScheduleService {
     }
 
     const { departureTime, arrivalTime, ...restData } = data;
+    const departureDateObj = new Date(departureTime);
+    const arrivalDateObj = new Date(arrivalTime);
+
+    // Перевірка, що час відправлення раніше часу прибуття
+    this.validateDateTime(departureDateObj, arrivalDateObj);
+
     return this.prisma.trainSchedule.create({
       data: {
         ...restData,
-        departureTime: new Date(departureTime),
-        arrivalTime: new Date(arrivalTime),
+        departureTime: departureDateObj,
+        arrivalTime: arrivalDateObj,
       },
       include: {
         departureStation: true,
@@ -79,6 +95,27 @@ export class TrainScheduleService {
         if (newDepartureId === newArrivalId) {
           throw new BadRequestException('Станція відправлення та прибуття не можуть бути однаковими');
         }
+      }
+    }
+
+    // Перевірка часу відправлення та прибуття
+    if (data.departureTime || data.arrivalTime) {
+      const existingSchedule = await this.prisma.trainSchedule.findUnique({
+        where: { id },
+        select: { departureTime: true, arrivalTime: true }
+      });
+      
+      if (existingSchedule) {
+        const newDepartureTime = data.departureTime 
+          ? new Date(data.departureTime) 
+          : existingSchedule.departureTime;
+        
+        const newArrivalTime = data.arrivalTime 
+          ? new Date(data.arrivalTime) 
+          : existingSchedule.arrivalTime;
+        
+        // Перевірка, що час відправлення раніше часу прибуття
+        this.validateDateTime(newDepartureTime, newArrivalTime);
       }
     }
 

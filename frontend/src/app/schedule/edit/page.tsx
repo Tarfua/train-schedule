@@ -32,7 +32,9 @@ const ScheduleEditPage: React.FC = () => {
     trainNumber: '',
     departureStation: null as Station | null,
     arrivalStation: null as Station | null,
+    departureDate: '',
     departureTime: '',
+    arrivalDate: '',
     arrivalTime: '',
     departurePlatform: '',
     arrivalPlatform: ''
@@ -46,15 +48,15 @@ const ScheduleEditPage: React.FC = () => {
         const stationsData = await stationService.getStations();
         const schedulesData = await trainScheduleService.getTrainSchedules();
         
-        // Форматуємо час для відображення
-        const formattedSchedules = schedulesData.map(schedule => ({
+        // Зберігаємо оригінальні дані, щоб мати доступ до повних дат при редагуванні
+        setSchedules(schedulesData.map(schedule => ({
           ...schedule,
-          departureTime: trainScheduleService.formatTime(schedule.departureTime),
-          arrivalTime: trainScheduleService.formatTime(schedule.arrivalTime)
-        }));
+          // Форматуємо дату і час для відображення
+          displayDepartureTime: trainScheduleService.formatDateTime(schedule.departureTime),
+          displayArrivalTime: trainScheduleService.formatDateTime(schedule.arrivalTime)
+        })));
         
         setStations(stationsData);
-        setSchedules(formattedSchedules);
       } catch (err) {
         console.error('Помилка при завантаженні даних:', err);
         setError('Не вдалося завантажити дані. Спробуйте пізніше.');
@@ -70,6 +72,15 @@ const ScheduleEditPage: React.FC = () => {
   const handleAddSchedule = () => {
     setFormMode('add');
     resetForm();
+    
+    // Встановлюємо поточну дату за замовчуванням для нового розкладу
+    const currentDate = new Date().toISOString().split('T')[0];
+    setFormData(prev => ({
+      ...prev,
+      departureDate: currentDate,
+      arrivalDate: currentDate
+    }));
+    
     setIsFormOpen(true);
   };
 
@@ -78,13 +89,30 @@ const ScheduleEditPage: React.FC = () => {
     setFormMode('edit');
     setSelectedSchedule(schedule);
     
+    // Отримуємо дату та час з ISO рядка
+    // Використовуємо повний об'єкт Date з оригінального поля, не з відформатованого
+    const departureDateObj = new Date(schedule.departureTime);
+    const arrivalDateObj = new Date(schedule.arrivalTime);
+    
+    // Отримуємо частину дати у форматі YYYY-MM-DD
+    const departureDate = departureDateObj.toISOString().split('T')[0];
+    const arrivalDate = arrivalDateObj.toISOString().split('T')[0];
+    
+    // Форматуємо час у формат HH:MM
+    const departureTime = 
+      `${departureDateObj.getHours().toString().padStart(2, '0')}:${departureDateObj.getMinutes().toString().padStart(2, '0')}`;
+    const arrivalTime = 
+      `${arrivalDateObj.getHours().toString().padStart(2, '0')}:${arrivalDateObj.getMinutes().toString().padStart(2, '0')}`;
+    
     // Заповнення форми даними обраного розкладу
     setFormData({
       trainNumber: schedule.trainNumber,
       departureStation: schedule.departureStation,
       arrivalStation: schedule.arrivalStation,
-      departureTime: schedule.departureTime,
-      arrivalTime: schedule.arrivalTime,
+      departureDate: departureDate,
+      departureTime: departureTime,
+      arrivalDate: arrivalDate,
+      arrivalTime: arrivalTime,
       departurePlatform: schedule.departurePlatform?.toString() || '',
       arrivalPlatform: schedule.arrivalPlatform?.toString() || ''
     });
@@ -120,7 +148,9 @@ const ScheduleEditPage: React.FC = () => {
       trainNumber: '',
       departureStation: null,
       arrivalStation: null,
+      departureDate: '',
       departureTime: '',
+      arrivalDate: '',
       arrivalTime: '',
       departurePlatform: '',
       arrivalPlatform: ''
@@ -146,8 +176,23 @@ const ScheduleEditPage: React.FC = () => {
     e.preventDefault();
     
     // Валідація форми
-    if (!formData.trainNumber || !formData.departureStation || !formData.arrivalStation || !formData.departureTime || !formData.arrivalTime) {
+    if (!formData.trainNumber || !formData.departureStation || !formData.arrivalStation || 
+        !formData.departureDate || !formData.departureTime || 
+        !formData.arrivalDate || !formData.arrivalTime) {
       setError('Будь ласка, заповніть всі обов\'язкові поля');
+      return;
+    }
+    
+    // Створюємо повні дати з дати та часу
+    const departureDateTime = `${formData.departureDate}T${formData.departureTime}:00`;
+    const arrivalDateTime = `${formData.arrivalDate}T${formData.arrivalTime}:00`;
+    
+    // Перевіряємо, що дата і час прибуття не раніше за дату і час відправлення
+    const departureDate = new Date(departureDateTime);
+    const arrivalDate = new Date(arrivalDateTime);
+    
+    if (arrivalDate < departureDate) {
+      setError('Час прибуття не може бути раніше за час відправлення');
       return;
     }
     
@@ -159,8 +204,8 @@ const ScheduleEditPage: React.FC = () => {
         trainNumber: formData.trainNumber,
         departureStationId: formData.departureStation.id,
         arrivalStationId: formData.arrivalStation.id,
-        departureTime: formData.departureTime,
-        arrivalTime: formData.arrivalTime,
+        departureTime: departureDateTime,
+        arrivalTime: arrivalDateTime,
         departurePlatform: formData.departurePlatform ? parseInt(formData.departurePlatform) : undefined,
         arrivalPlatform: formData.arrivalPlatform ? parseInt(formData.arrivalPlatform) : undefined
       };
@@ -177,20 +222,20 @@ const ScheduleEditPage: React.FC = () => {
         throw new Error('Не вдалося визначити ID розкладу для оновлення');
       }
       
-      // Форматуємо час для відображення
-      updatedSchedule = {
+      // Додаємо відформатований час для відображення
+      const updatedScheduleWithDisplay = {
         ...updatedSchedule,
-        departureTime: trainScheduleService.formatTime(updatedSchedule.departureTime),
-        arrivalTime: trainScheduleService.formatTime(updatedSchedule.arrivalTime)
+        displayDepartureTime: trainScheduleService.formatDateTime(updatedSchedule.departureTime),
+        displayArrivalTime: trainScheduleService.formatDateTime(updatedSchedule.arrivalTime)
       };
       
       // Оновлюємо стан, залежно від режиму (додавання або редагування)
       if (formMode === 'add') {
-        setSchedules(prevSchedules => [...prevSchedules, updatedSchedule]);
+        setSchedules(prevSchedules => [...prevSchedules, updatedScheduleWithDisplay]);
       } else {
         setSchedules(prevSchedules => 
           prevSchedules.map(schedule => 
-            schedule.id === updatedSchedule.id ? updatedSchedule : schedule
+            schedule.id === updatedScheduleWithDisplay.id ? updatedScheduleWithDisplay : schedule
           )
         );
       }
@@ -253,29 +298,25 @@ const ScheduleEditPage: React.FC = () => {
           </button>
         </div>
       </div>
-
-      {/* Повідомлення про помилку */}
+      
+      {/* Відображення помилки */}
       {error && (
         <div className="p-4 mb-6 bg-dark-800 rounded-lg text-error">
           {error}
         </div>
       )}
-
-      {/* Індикатор обробки */}
-      {isProcessing && (
-        <div className="p-4 mb-6 bg-dark-800 rounded-lg text-accent-muted">
-          Обробка запиту...
-        </div>
-      )}
-
-      {/* Таблиця розкладів */}
-      <ScheduleTable 
-        schedules={schedules} 
-        onEdit={handleEditSchedule}
-        onDelete={handleDeleteSchedule}
-      />
-
-      {/* Модальне вікно для додавання/редагування розкладу */}
+      
+      {/* Таблиця розкладу */}
+      <div className="bg-dark-800 rounded-lg overflow-hidden">
+        <ScheduleTable 
+          schedules={schedules} 
+          onEdit={handleEditSchedule} 
+          onDelete={handleDeleteSchedule}
+          isProcessing={isProcessing}
+        />
+      </div>
+      
+      {/* Модальне вікно для редагування */}
       <ScheduleFormModal
         isOpen={isFormOpen}
         mode={formMode}

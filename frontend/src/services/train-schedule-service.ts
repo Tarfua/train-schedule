@@ -54,6 +54,34 @@ export class TrainScheduleService {
   }
 
   /**
+   * Фільтрує розклад, щоб показувати тільки майбутні або нещодавні (в межах 10 хвилин) відправлення/прибуття
+   * @param schedules Масив розкладів
+   * @param stationType Тип станції ('departures' або 'arrivals')
+   * @returns Відфільтрований масив розкладів
+   */
+  public filterRecentAndUpcomingSchedules(
+    schedules: TrainSchedule[], 
+    stationType: 'departures' | 'arrivals'
+  ): TrainSchedule[] {
+    const now = new Date();
+    // 10 хвилин тому
+    const tenMinutesAgo = new Date(now.getTime() - 10 * 60 * 1000);
+    
+    return schedules.filter(schedule => {
+      // Вибираємо час залежно від типу (відправлення чи прибуття)
+      const timeStr = stationType === 'departures' 
+        ? schedule.departureTime 
+        : schedule.arrivalTime;
+      
+      // Створюємо повний об'єкт Date з часом з розкладу
+      const scheduleTime = new Date(timeStr);
+      
+      // Залишаємо тільки ті, що в майбутньому або відбулися не більше 10 хвилин тому
+      return scheduleTime >= tenMinutesAgo;
+    });
+  }
+
+  /**
    * Отримує розклад потяга за ID
    * @param id ID розкладу
    * @returns Проміс з розкладом
@@ -74,9 +102,7 @@ export class TrainScheduleService {
    */
   public async createTrainSchedule(data: TrainScheduleDto): Promise<TrainSchedule> {
     try {
-      // Форматуємо час у відповідний формат ISO для API
-      const formattedData = this.formatTimeForApi(data);
-      return await apiService.post<TrainSchedule>(this.baseUrl, formattedData);
+      return await apiService.post<TrainSchedule>(this.baseUrl, data);
     } catch (error) {
       console.error('Помилка при створенні розкладу потяга:', error);
       throw error;
@@ -91,10 +117,8 @@ export class TrainScheduleService {
    */
   public async updateTrainSchedule(id: string, data: TrainScheduleDto): Promise<TrainSchedule> {
     try {
-      // Форматуємо час у відповідний формат ISO для API
-      const formattedData = this.formatTimeForApi(data);
       // Наразі використовуємо PATCH, але можна замінити на PUT якщо API використовує його
-      return await apiService.patch<TrainSchedule>(`${this.baseUrl}/${id}`, formattedData);
+      return await apiService.patch<TrainSchedule>(`${this.baseUrl}/${id}`, data);
     } catch (error) {
       console.error(`Помилка при оновленні розкладу потяга з ID ${id}:`, error);
       throw error;
@@ -116,45 +140,29 @@ export class TrainScheduleService {
   }
 
   /**
-   * Форматує дані розкладу для відправки на API
-   * @param data Дані розкладу
-   * @returns Відформатовані дані розкладу
+   * Функція для перевірки правильності дати та часу
+   * @param departureDateTime Дата та час відправлення
+   * @param arrivalDateTime Дата та час прибуття
+   * @returns Чи правильно задані дати та час
    */
-  private formatTimeForApi(data: TrainScheduleDto): TrainScheduleDto {
-    // Отримуємо поточну дату
-    const now = new Date();
-    const year = now.getFullYear();
-    const month = now.getMonth();
-    const day = now.getDate();
-    
-    // Створюємо копію даних для форматування
-    const formattedData = { ...data };
-    
-    // Форматуємо час у ISO формат
-    if (data.departureTime) {
-      const [hours, minutes] = data.departureTime.split(':');
-      const date = new Date(year, month, day, parseInt(hours), parseInt(minutes));
-      formattedData.departureTime = date.toISOString();
+  public validateDatesOrder(departureDateTime: string, arrivalDateTime: string): boolean {
+    const departureDate = new Date(departureDateTime);
+    const arrivalDate = new Date(arrivalDateTime);
+    return departureDate <= arrivalDate;
+  }
+
+  /**
+   * Форматує дату у зручний для відображення формат (ДД.ММ.РРРР)
+   * @param dateString Рядок дати/часу
+   * @returns Відформатована дата
+   */
+  public formatDate(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      return `${date.getDate().toString().padStart(2, '0')}.${(date.getMonth() + 1).toString().padStart(2, '0')}.${date.getFullYear()}`;
+    } catch {
+      return '--.--.----';
     }
-    
-    if (data.arrivalTime) {
-      const [hours, minutes] = data.arrivalTime.split(':');
-      const date = new Date(year, month, day, parseInt(hours), parseInt(minutes));
-      formattedData.arrivalTime = date.toISOString();
-    }
-    
-    // Перетворюємо платформи з рядка в число
-    if (typeof formattedData.departurePlatform === 'string') {
-      const platform = parseInt(formattedData.departurePlatform as any);
-      formattedData.departurePlatform = isNaN(platform) ? undefined : platform;
-    }
-    
-    if (typeof formattedData.arrivalPlatform === 'string') {
-      const platform = parseInt(formattedData.arrivalPlatform as any);
-      formattedData.arrivalPlatform = isNaN(platform) ? undefined : platform;
-    }
-    
-    return formattedData;
   }
 
   /**
@@ -168,6 +176,22 @@ export class TrainScheduleService {
       return `${date.getHours().toString().padStart(2, '0')}:${date.getMinutes().toString().padStart(2, '0')}`;
     } catch {
       return '--:--';
+    }
+  }
+
+  /**
+   * Форматує дату та час у зручний для читання формат (ДД.ММ.РРРР HH:MM)
+   * @param dateString Рядок дати/часу
+   * @returns Відформатовані дата та час
+   */
+  public formatDateTime(dateString: string): string {
+    try {
+      const date = new Date(dateString);
+      const formattedDate = this.formatDate(dateString);
+      const formattedTime = this.formatTime(dateString);
+      return `${formattedDate} ${formattedTime}`;
+    } catch {
+      return '--.--.---- --:--';
     }
   }
 }

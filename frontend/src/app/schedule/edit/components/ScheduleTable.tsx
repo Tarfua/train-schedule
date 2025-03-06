@@ -3,16 +3,23 @@
 import React from 'react';
 import { TrainSchedule } from '@/types/train-schedule.types';
 
+// Розширюємо тип TrainSchedule для нашого використання
+interface ScheduleWithDisplayTime extends TrainSchedule {
+  displayDepartureTime?: string;
+  displayArrivalTime?: string;
+}
+
 interface ScheduleTableProps {
-  schedules: TrainSchedule[];
-  onEdit: (schedule: TrainSchedule) => void;
+  schedules: ScheduleWithDisplayTime[];
+  onEdit: (schedule: ScheduleWithDisplayTime) => void;
   onDelete: (scheduleId: string) => void;
+  isProcessing?: boolean;
 }
 
 /**
  * Компонент таблиці розкладів потягів для редагування
  */
-const ScheduleTable: React.FC<ScheduleTableProps> = ({ schedules, onEdit, onDelete }) => {
+const ScheduleTable: React.FC<ScheduleTableProps> = ({ schedules, onEdit, onDelete, isProcessing = false }) => {
   return (
     <div className="bg-dark-800 rounded-lg overflow-hidden">
       <table className="w-full border-collapse border-spacing-0">
@@ -51,10 +58,10 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ schedules, onEdit, onDele
                   {schedule.arrivalStation.name}
                 </td>
                 <td className="py-3 px-4 text-center font-mono">
-                  {schedule.departureTime}
+                  {schedule.displayDepartureTime || schedule.departureTime}
                 </td>
                 <td className="py-3 px-4 text-center font-mono">
-                  {schedule.arrivalTime}
+                  {schedule.displayArrivalTime || schedule.arrivalTime}
                 </td>
                 <td className="py-3 px-4 text-center font-mono">
                   {schedule.departurePlatform || '-'}
@@ -66,7 +73,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ schedules, onEdit, onDele
                   <div className="flex justify-end gap-2">
                     <button
                       onClick={() => onEdit(schedule)}
-                      className="p-1.5 bg-dark-700 hover:bg-dark-600 text-accent rounded transition-colors"
+                      disabled={isProcessing}
+                      className={`p-1.5 ${isProcessing ? 'bg-dark-600 text-accent-muted cursor-not-allowed' : 'bg-dark-700 hover:bg-dark-600 text-accent cursor-pointer'} rounded transition-colors`}
                       title="Редагувати"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -75,7 +83,8 @@ const ScheduleTable: React.FC<ScheduleTableProps> = ({ schedules, onEdit, onDele
                     </button>
                     <button
                       onClick={() => onDelete(schedule.id)}
-                      className="p-1.5 bg-dark-700 hover:bg-error hover:text-dark-900 text-accent rounded transition-colors"
+                      disabled={isProcessing}
+                      className={`p-1.5 ${isProcessing ? 'bg-dark-600 text-accent-muted cursor-not-allowed' : 'bg-dark-700 hover:bg-error hover:text-dark-900 text-accent cursor-pointer'} rounded transition-colors`}
                       title="Видалити"
                     >
                       <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
