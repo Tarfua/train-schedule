@@ -6,10 +6,8 @@ WORKDIR /app
 # Install build essentials
 RUN apk add --no-cache python3 make g++
 
-# Copy configuration files first
-COPY package*.json ./
-COPY tsconfig.json tsconfig.build.json ./
-COPY nest-cli.json ./
+# Copy all source files first
+COPY . .
 
 # Show environment info
 RUN node -v && npm -v
@@ -17,15 +15,8 @@ RUN node -v && npm -v
 # Install dependencies
 RUN npm ci
 
-# Copy source and prisma files
-COPY prisma ./prisma
-COPY src ./src
-
 # Generate Prisma client
 RUN npx prisma generate
-
-# Copy remaining files
-COPY . .
 
 # Build with NestJS CLI
 RUN npm run build \
